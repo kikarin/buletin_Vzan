@@ -1,212 +1,159 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { doc, getDoc, deleteDoc, collection, setDoc, getDocs, serverTimestamp  } from 'firebase/firestore';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import {
+  doc, getDoc, updateDoc, arrayUnion, collection, addDoc, getDocs, deleteDoc, setDoc
+} from 'firebase/firestore';
 import { db } from '../services/firebase';
+import { onAuthStateChanged, getAuth } from 'firebase/auth';
+import BuletinContent from '../components/BuletinContent';
+import LikeButton from '../components/LikeButton';
+import BookmarkButton from '../components/BookmarkButton';
+import CommentSection from '../components/CommentSection';
 
 function BuletinDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [buletin, setBuletin] = useState(null);
+  const auth = getAuth();
+
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isPublic, setIsPublic] = useState(true);
+  const [buletin, setBuletin] = useState(null);
+
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
-  const userId = localStorage.getItem('userId');
-  const userName = localStorage.getItem('userName');
+  const [bookmarked, setBookmarked] = useState(false);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
-  const [bookmarked, setBookmarked] = useState(false);
 
-  // Komponen Form Balasan
-  function ReplyForm({ onSubmit }) {
-    const [replyText, setReplyText] = useState('');
-    return (
-      <div className="mt-2">
-        <input
-          className="w-full border px-2 py-1 rounded text-sm"
-          placeholder="Balas komentar..."
-          value={replyText}
-          onChange={(e) => setReplyText(e.target.value)}
-        />
-        <button
-          className="mt-1 text-sm bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700"
-          onClick={() => {
-            if (replyText.trim()) {
-              onSubmit(replyText);
-              setReplyText('');
-            }
-          }}
-        >
-          Kirim Balasan
-        </button>
-      </div>
-    );
-  }
+  // Dengarkan perubahan auth dan set user
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser);
+    });
+    return () => unsubscribe();
+  }, [auth]);
 
-  // Ambil detail buletin
+  // Ambil buletin setelah user terdeteksi
   useEffect(() => {
     const fetchBuletin = async () => {
+      if (!id || !user) return;
+
       try {
-        const docRef = doc(db, 'buletins', id);
+        const docRef = doc(db, 'posts', id);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const data = docSnap.data();
-          setBuletin(data);
-          setIsPublic(data.isPublic);
-        } else {
-          console.warn('Buletin tidak ditemukan');
+          setBuletin({ id: docSnap.id, ...data });
+          setLikeCount(data.likes?.length || 0);
+          setLiked(data.likes?.includes(user.uid));
+          setBookmarked(data.bookmarks?.includes(user.uid));
         }
+
+        const commentRef = collection(db, 'posts', id, 'comments');
+        const commentSnap = await getDocs(commentRef);
+        const commentList = commentSnap.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setComments(commentList);
       } catch (err) {
-        console.error('Gagal mengambil buletin:', err);
+        console.error("Gagal ambil data buletin:", err);
       } finally {
         setLoading(false);
       }
     };
-    if (id) fetchBuletin();
-  }, [id]);
 
-  // Cek status like dan jumlah like
-  useEffect(() => {
-    const checkLikeStatus = async () => {
-      if (!id || !userId) return;
-      const likeRef = doc(db, 'buletin', id, 'likes', userId);
-      const likeSnap = await getDoc(likeRef);
-      setLiked(likeSnap.exists());
+    fetchBuletin();
+  }, [id, user]);
 
-      const likesCol = collection(db, 'buletin', id, 'likes');
-      const likesSnapshot = await getDocs(likesCol);
-      setLikeCount(likesSnapshot.size);
-    };
-    checkLikeStatus();
-  }, [id, userId]);
+  const handleToggleLike = async () => {
+    const docRef = doc(db, 'posts', id);
+    const updatedLikes = liked
+      ? buletin.likes.filter(uid => uid !== user.uid)
+      : [...(buletin.likes || []), user.uid];
 
-  // Cek bookmark
-  useEffect(() => {
-    const checkBookmarkStatus = async () => {
-      if (!userId || !id) return;
-      const bookmarkRef = doc(db, 'users', userId, 'bookmarks', id);
-      const bookmarkSnap = await getDoc(bookmarkRef);
-      setBookmarked(bookmarkSnap.exists());
-    };
-    checkBookmarkStatus();
-  }, [id, userId]);
+    await updateDoc(docRef, { likes: updatedLikes });
+    setLiked(!liked);
+    setLikeCount(updatedLikes.length);
+    setBuletin(prev => ({ ...prev, likes: updatedLikes }));
+  };
 
-  // Ambil komentar + balasan
-  useEffect(() => {
-    const fetchComments = async () => {
-      const commentsCol = collection(db, 'buletin', id, 'comments');
-      const snapshot = await getDocs(commentsCol);
-      const commentsData = await Promise.all(snapshot.docs.map(async (docSnap) => {
-        const repliesCol = collection(docSnap.ref, 'replies');
-        const repliesSnapshot = await getDocs(repliesCol);
-        const replies = repliesSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        return { id: docSnap.id, ...docSnap.data(), replies };
-      }));
-      setComments(commentsData);
-    };
-    if (id) fetchComments();
-  }, [id]);
+  const handleToggleBookmark = async () => {
+    const postRef = doc(db, 'posts', id);
+    const userBookmarkRef = doc(db, 'users', user.uid, 'bookmarks', id); // ref ke subkoleksi bookmark
 
-  // Toggle Like
-  const handleLikeToggle = async () => {
-    const likeRef = doc(db, 'buletin', id, 'likes', userId);
+    const updatedBookmarks = bookmarked
+      ? buletin.bookmarks.filter(uid => uid !== user.uid)
+      : [...(buletin.bookmarks || []), user.uid];
+
     try {
-      if (liked) {
-        await deleteDoc(likeRef);
-        setLiked(false);
-        setLikeCount((prev) => prev - 1);
+      await updateDoc(postRef, { bookmarks: updatedBookmarks });
+
+      if (bookmarked) {
+        // Hapus dari koleksi bookmark user
+        await deleteDoc(userBookmarkRef);
       } else {
-        await setDoc(likeRef, { likedAt: new Date() });
-        setLiked(true);
-        setLikeCount((prev) => prev + 1);
+        // Tambah ke koleksi bookmark user
+        await setDoc(userBookmarkRef, { bookmarkedAt: new Date() });
       }
-    } catch (error) {
-      console.error("Gagal memproses like:", error);
+
+      setBookmarked(!bookmarked);
+      setBuletin(prev => ({ ...prev, bookmarks: updatedBookmarks }));
+    } catch (err) {
+      console.error("Gagal toggle bookmark:", err);
     }
   };
 
-  // Kirim Komentar
-  const handleCommentSubmit = async () => {
+  const handleSubmitComment = async () => {
     if (!newComment.trim()) return;
 
-    const commentRef = doc(collection(db, 'buletin', id, 'comments'));
-    await setDoc(commentRef, {
-      userId,
-      userName,
+    const comment = {
+      userId: user.uid,
+      userName: user.displayName || 'Anonim',
       content: newComment,
-      createdAt: serverTimestamp()
-    });
+      createdAt: new Date(),
+      replies: []
+    };
+
+    const commentRef = collection(db, 'posts', id, 'comments');
+    const docRef = await addDoc(commentRef, comment);
+    setComments(prev => [...prev, { id: docRef.id, ...comment }]);
     setNewComment('');
 
-    // Notifikasi ke pemilik buletin
-    try {
-      if (buletin?.userId && userId !== buletin.userId)        {
-        const notifRef = doc(collection(db, 'users', buletin.userId, 'notifications'));
-        await setDoc(notifRef, {
-          type: 'comment',
-          fromUserId: userId,
-          fromUserName: userName,
-          buletinId: id,
-          createdAt: serverTimestamp(),
-          message: `${userName} mengomentari buletinmu`
-        });
-      }
-    } catch (err) {
-      console.error("Gagal mengirim notifikasi:", err);
+    // Kirim notifikasi ke pemilik buletin (jika bukan komentator sendiri)
+    if (buletin.userId !== user.uid) {
+      const notifRef = doc(collection(db, 'users', buletin.userId, 'notifications'));
+      await setDoc(notifRef, {
+        fromUser: user.displayName || 'Anonim',
+        buletinId: buletin.id,
+        buletinTitle: buletin.title,
+        isRead: false,
+        createdAt: new Date()
+      });
     }
-
-
-  
-
-    const snapshot = await getDocs(collection(db, 'buletin', id, 'comments'));
-    const commentsData = await Promise.all(snapshot.docs.map(async (docSnap) => {
-      const repliesCol = collection(docSnap.ref, 'replies');
-      const repliesSnapshot = await getDocs(repliesCol);
-      const replies = repliesSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      return { id: docSnap.id, ...docSnap.data(), replies };
-    }));
-    setComments(commentsData);    
   };
 
-  // Kirim Balasan
-  const handleReplySubmit = async (commentId, replyText) => {
-    const replyRef = doc(collection(db, 'buletin', id, 'comments', commentId, 'replies'));
-    await setDoc(replyRef, {
-      userId,
-      userName,
-      content: replyText,
-      createdAt: serverTimestamp()
+
+  const handleSubmitReply = async (commentId, replyText) => {
+    const commentDoc = doc(db, 'posts', id, 'comments', commentId);
+    const reply = {
+      id: Date.now().toString(),
+      userId: user.uid,
+      userName: user.displayName || 'Anonim',
+      content: replyText
+    };
+
+    await updateDoc(commentDoc, {
+      replies: arrayUnion(reply)
     });
 
-    // Refresh komentar
-    const snapshot = await getDocs(collection(db, 'buletin', id, 'comments'));
-    const commentsData = await Promise.all(snapshot.docs.map(async (docSnap) => {
-      const repliesCol = collection(docSnap.ref, 'replies');
-      const repliesSnapshot = await getDocs(repliesCol);
-      const replies = repliesSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-      return { id: docSnap.id, ...docSnap.data(), replies };
-    }));
-    setComments(commentsData);
-  };
-
-  // Toggle Bookmark
-  const handleBookmarkToggle = async () => {
-    const bookmarkRef = doc(db, 'users', userId, 'bookmarks', id);
-    try {
-      if (bookmarked) {
-        await deleteDoc(bookmarkRef);
-        setBookmarked(false);
-      } else {
-        await setDoc(bookmarkRef, {
-          buletinId: id,
-          bookmarkedAt: new Date(),
-          buletinName: buletin?.buletinName || '',
-        });
-        setBookmarked(true);
-      }
-    } catch (err) {
-      console.error('Gagal toggle bookmark:', err);
-    }
+    setComments(prev =>
+      prev.map(comment =>
+        comment.id === commentId
+          ? { ...comment, replies: [...(comment.replies || []), reply] }
+          : comment
+      )
+    );
   };
 
   if (loading) return <p className="text-center mt-10">Loading detail...</p>;
@@ -218,71 +165,39 @@ function BuletinDetail() {
         <button className="text-blue-600 hover:underline mb-4" onClick={() => navigate(-1)}>
           ← Kembali
         </button>
-        {/* Nama Buletin */}
-        {buletin.buletinName && (
-          <p className="text-sm text-blue-500 uppercase tracking-wide mb-1">
-            {buletin.buletinName}
-          </p>
-        )}
 
-        {/* Judul Artikel */}
-        {buletin.title && (
-          <h1 className="text-4xl font-bold mb-2">{buletin.title}</h1>
-        )}
-    <div className="p-6">
-      <h1 className="text-2xl font-bold">{buletin.buletinName}</h1>
-      <p className="text-gray-700">{buletin.description}</p>
-    </div>
+        <BuletinContent buletin={buletin} />
 
-        <div className="flex items-center gap-3 mt-4">
-          <button
-            onClick={handleLikeToggle}
-            className={`px-3 py-1 rounded text-white ${liked ? 'bg-red-500' : 'bg-gray-500'} hover:opacity-80`}
+        {/* Tautan ke profil penulis */}
+        <div className="my-4">
+          <span className="text-gray-600 text-sm">Ditulis oleh: </span>
+          <Link
+            to={`/profile/${buletin.userId}`}
+            className="text-blue-600 hover:underline text-sm"
           >
-            ❤️ {liked ? 'Liked' : 'Like'}
-          </button>
-          <span className="text-gray-700">{likeCount} likes</span>
+            {buletin.userName || 'Penulis'}
+          </Link>
         </div>
 
-        <button
-          onClick={handleBookmarkToggle}
-          className={`mt-2 px-3 py-1 rounded text-white ${bookmarked ? 'bg-green-600' : 'bg-gray-500'} hover:opacity-80`}
-        >
-          📌 {bookmarked ? 'Bookmarked' : 'Bookmark'}
-        </button>
 
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-2">Komentar</h3>
-          <textarea
-            className="w-full border p-2 rounded"
-            rows="3"
-            placeholder="Tulis komentar..."
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-          />
-          <button onClick={handleCommentSubmit} className="mt-2 bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700">
-            Kirim
-          </button>
+        <BuletinContent buletin={buletin} />
+        <LikeButton
+          liked={liked}
+          likeCount={likeCount}
+          onToggle={handleToggleLike}
+        />
+        <BookmarkButton
+          bookmarked={bookmarked}
+          onToggle={handleToggleBookmark}
+        />
 
-          <div className="mt-4 space-y-4">
-            {comments.map((comment) => (
-              <div key={comment.id} className="border p-3 rounded">
-                <p className="font-medium">
-                  <span className="text-blue-700 font-semibold">{comment.userName}:</span> {comment.content}
-                </p>
-                <div className="ml-4 mt-2">
-                  <h4 className="text-sm font-semibold">Balasan:</h4>
-                  {comment.replies?.map(reply => (
-                    <p key={reply.id} className="text-sm ml-2">
-                      ↪️ <span className="text-green-700 font-semibold">{reply.userName}:</span> {reply.content}
-                    </p>
-                  ))}
-                  <ReplyForm onSubmit={(text) => handleReplySubmit(comment.id, text)} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <CommentSection
+          comments={comments}
+          newComment={newComment}
+          setNewComment={setNewComment}
+          onSubmitComment={handleSubmitComment}
+          onSubmitReply={handleSubmitReply}
+        />
       </div>
     </div>
   );

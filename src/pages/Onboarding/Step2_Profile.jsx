@@ -130,7 +130,7 @@ function Step2_Profile() {
           </button>
         </div>
 
-        <p className="text-center text-sm text-gray-400">Langkah 2 dari 5</p>
+        <p className="text-center text-sm text-gray-400">Langkah 2 dari 4</p>
       </div>
     </div>
   )

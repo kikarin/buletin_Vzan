@@ -7,37 +7,28 @@ import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { onAuthStateChanged } from 'firebase/auth';
 import { saveBuletin } from '../services/saveBuletin';
 
-
 function CreatePost() {
     const navigate = useNavigate();
     const [userName, setUserName] = useState('');
-    const [buletinName, setBuletinName] = useState('');
+    const [userId, setUserId] = useState('');
+    const [userBuletins, setUserBuletins] = useState([]);
+    const [selectedBuletins, setSelectedBuletins] = useState(null);
+
+    const [title, setTitle] = useState('');
+    const [subtitle, setSubtitle] = useState('');
     const [content, setContent] = useState('');
     const [isPublic, setIsPublic] = useState(true);
     const [saved, setSaved] = useState(false);
-    const [title, setTitle] = useState('');
-    const [subtitle, setSubtitle] = useState('');
-    const [category, setCategory] = useState('');
-    const [userId, setUserId] = useState('');
-    const [buletinProfileImage, setBuletinProfileImage] = useState('');
-    const [userBuletins, setUserBuletins] = useState([]);
-    const [selectedBuletinsId, setSelectedBuletinsId] = useState('');
 
     useEffect(() => {
-        const savedBuletin = JSON.parse(localStorage.getItem('createdBuletin')) || {};
-        setUserName(localStorage.getItem('userName') || '');
-        setBuletinName(savedBuletin.buletinName || '');
-        setCategory(savedBuletin.category || '');
-        setBuletinProfileImage(savedBuletin.profileImage || savedBuletin.profileImageUrl || '');
-
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
                 const uid = user.uid;
                 setUserId(uid);
+                setUserName(user.displayName || '');
                 fetchUserBuletins(uid);
             }
         });
-
         return () => unsubscribe();
     }, []);
 
@@ -46,7 +37,6 @@ function CreatePost() {
             const q = query(collection(db, 'buletins'), where('userId', '==', uid));
             const snapshot = await getDocs(q);
             const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            console.log("Buletins milik user:", list);
             setUserBuletins(list);
         } catch (err) {
             console.error("❌ Gagal mengambil buletins:", err);
@@ -54,19 +44,17 @@ function CreatePost() {
     };
 
     const handleSave = async () => {
-        if (!selectedBuletinsId) {
+        if (!selectedBuletins) {
             alert("❗Silakan pilih buletins terlebih dahulu.");
             return;
         }
 
+        if (!title.trim() || !content.trim()) {
+            alert("❗Judul dan isi tidak boleh kosong.");
+            return;
+        }
+
         try {
-            const selectedBuletins = userBuletins.find(b => b.id === selectedBuletinsId);
-
-            if (!selectedBuletins) {
-                alert("❗Data buletins tidak valid.");
-                return;
-            }
-
             const postData = {
                 userId,
                 userName,
@@ -74,9 +62,9 @@ function CreatePost() {
                 subtitle,
                 content,
                 isPublic,
-                buletinsId: selectedBuletinsId,
-                buletinName: selectedBuletins.buletinName || '',
-                category: selectedBuletins.category || '',
+                buletinId: selectedBuletins.id,
+                buletinName: selectedBuletins.buletinName,
+                category: selectedBuletins.category,
                 buletinProfileImage: selectedBuletins.profileImageUrl || '',
                 createdAt: new Date(),
             };
@@ -101,16 +89,10 @@ function CreatePost() {
                 <div>
                     <label className="block mb-1 font-semibold">Pilih Buletins</label>
                     <select
-                        value={selectedBuletinsId}
+                        value={selectedBuletins?.id || ''}
                         onChange={(e) => {
-                            const selectedId = e.target.value;
-                            setSelectedBuletinsId(selectedId);
-                            const selected = userBuletins.find(b => b.id === selectedId);
-                            if (selected) {
-                                setBuletinName(selected.buletinName || '');
-                                setCategory(selected.category || '');
-                                setBuletinProfileImage(selected.profileImageUrl || '');
-                            }
+                            const selected = userBuletins.find(b => b.id === e.target.value);
+                            setSelectedBuletins(selected || null);
                         }}
                         className="w-full border p-2 rounded"
                     >
@@ -123,10 +105,12 @@ function CreatePost() {
                     </select>
                 </div>
 
-                <div className="text-center text-gray-600">
-                    <p><strong>{buletinName}</strong></p>
-                    <p>oleh <strong>{userName}</strong></p>
-                </div>
+                {selectedBuletins && (
+                    <div className="text-center text-gray-600">
+                        <p><strong>{selectedBuletins.buletinName}</strong></p>
+                        <p>oleh <strong>{userName}</strong></p>
+                    </div>
+                )}
 
                 <div className="border rounded overflow-hidden">
                     <input

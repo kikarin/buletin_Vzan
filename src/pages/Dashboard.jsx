@@ -20,33 +20,39 @@ function Dashboard() {
   const [buletinProfiles, setBuletinProfiles] = useState({});
   const [loading, setLoading] = useState(true);
   const [dropdownOpenId, setDropdownOpenId] = useState(null);
-  const dropdownRef = useRef(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
 
       try {
-        // Ambil semua buletin profil user
+        // 1. Ambil semua buletins milik user
         const buletinsSnapshot = await getDocs(
           query(collection(db, 'buletins'), where('userId', '==', user.uid))
         );
+        const buletins = [];
         const buletinProfilesMap = {};
         buletinsSnapshot.forEach(doc => {
+          buletins.push(doc.id);
           buletinProfilesMap[doc.id] = doc.data();
         });
         setBuletinProfiles(buletinProfilesMap);
 
-        // Ambil semua post user
-        const postsSnapshot = await getDocs(
-          query(collection(db, 'posts'), where('userId', '==', user.uid))
-        );
-        const postData = postsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        // 2. Ambil semua buletin (post) berdasarkan buletins.id (parent relationship)
+        const allPosts = [];
+        for (const buletinId of buletins) {
+          const postsSnapshot = await getDocs(
+            query(collection(db, 'posts'), where('buletinId', '==', buletinId))
+          );
+          postsSnapshot.forEach(doc => {
+            allPosts.push({
+              id: doc.id,
+              ...doc.data()
+            });
+          });
+        }
 
-        setPosts(postData);
+        setPosts(allPosts);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
@@ -57,15 +63,7 @@ function Dashboard() {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setDropdownOpenId(null);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+
 
   const handleDelete = async (id) => {
     if (window.confirm('Yakin ingin menghapus buletin ini?')) {
@@ -84,16 +82,17 @@ function Dashboard() {
   const renderAvatar = (buletinId) => {
     const profile = buletinProfiles[buletinId];
     if (!profile) return null;
-
-    if (profile.avatarUrl) {
+  
+    if (profile.profileImageUrl) {
       return (
         <img
-          src={profile.avatarUrl}
+          src={profile.profileImageUrl}
           alt="Avatar"
           className="w-10 h-10 rounded-full object-cover"
         />
       );
     }
+  
     const initials = (profile.name || '').slice(0, 2).toUpperCase() || 'BN';
     return (
       <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">
@@ -101,6 +100,7 @@ function Dashboard() {
       </div>
     );
   };
+  
 
   return (
     <DashboardLayout>
@@ -114,10 +114,10 @@ function Dashboard() {
             <p className="mb-4">Kamu belum membuat buletin post.</p>
             <div className="flex justify-center gap-4">
               <button
-                onClick={() => navigate('/import-post')}
+                onClick={() => navigate('/create-buletins')}
                 className="bg-gray-100 border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-200"
               >
-                Import Post
+                Create Buletin
               </button>
               <button
                 onClick={() => navigate('/create')}
@@ -147,15 +147,20 @@ function Dashboard() {
                     </div>
                   </div>
 
-                  <div className="relative" ref={dropdownRef}>
-                    <button onClick={() => setDropdownOpenId(dropdownOpenId === p.id ? null : p.id)}>
+                  <div className="relative">
+                    <button onClick={() =>
+                      setDropdownOpenId(dropdownOpenId === p.id ? null : p.id)
+                    }>
                       <MoreVertical className="w-5 h-5 text-gray-600" />
                     </button>
 
                     {dropdownOpenId === p.id && (
                       <div className="absolute right-0 mt-2 w-44 bg-white border rounded shadow z-10">
                         <button
-                          onClick={() => navigate(`/buletin/${p.id}`)}
+                          onClick={() => {
+                            navigate(`/buletin/${p.id}`);
+                            setDropdownOpenId(null); // Tutup dropdown
+                          }}
                           className="block px-4 py-2 text-left w-full hover:bg-gray-100"
                         >👁️ View Post</button>
 
@@ -163,34 +168,48 @@ function Dashboard() {
                           onClick={() => {
                             navigator.clipboard.writeText(`${window.location.origin}/buletin/${p.id}`);
                             alert("URL disalin!");
+                            setDropdownOpenId(null);
                           }}
                           className="block px-4 py-2 text-left w-full hover:bg-gray-100"
                         >🔗 Share</button>
 
                         <button
-                          onClick={() => alert("📊 Statistik belum tersedia")}
+                          onClick={() => {
+                            alert("📊 Statistik belum tersedia");
+                            setDropdownOpenId(null);
+                          }}
                           className="block px-4 py-2 text-left w-full hover:bg-gray-100"
                         >📊 Stats</button>
 
                         <button
-                          onClick={() => navigate(`/edit/${p.id}`)}
+                          onClick={() => {
+                            navigate(`/edit/${p.id}`);
+                            setDropdownOpenId(null);
+                          }}
                           className="block px-4 py-2 text-left w-full hover:bg-gray-100"
                         >✏️ Edit</button>
 
                         <button
-                          onClick={() => togglePublish(p.id, p.isPublic)}
+                          onClick={() => {
+                            togglePublish(p.id, p.isPublic);
+                            setDropdownOpenId(null);
+                          }}
                           className="block px-4 py-2 text-left w-full hover:bg-gray-100"
                         >
                           {p.isPublic ? '🔒 Unpublish' : '🚀 Publish'}
                         </button>
 
                         <button
-                          onClick={() => handleDelete(p.id)}
+                          onClick={() => {
+                            handleDelete(p.id);
+                            setDropdownOpenId(null);
+                          }}
                           className="block px-4 py-2 text-left w-full text-red-600 hover:bg-red-50"
                         >🗑️ Delete</button>
                       </div>
                     )}
                   </div>
+
                 </li>
               );
             })}

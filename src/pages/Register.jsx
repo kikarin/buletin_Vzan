@@ -1,6 +1,7 @@
 // src/pages/Register.jsx
 import { useState } from 'react'
-import { auth } from '../services/firebase'
+import { auth, db } from '../services/firebase'
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, updateProfile } from 'firebase/auth'
 import { useNavigate } from 'react-router-dom'
 import AuthLayout from '../components/AuthLayout'
@@ -12,31 +13,79 @@ function Register() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState(null)
+  
 
   const handleRegister = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (password !== confirmPassword) {
-      setError('Password tidak cocok')
-      return
+      setError('Password tidak cocok');
+      return;
     }
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
-      await updateProfile(userCredential.user, { displayName: name })
-      navigate('/onboarding/1')
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      await updateProfile(user, { displayName: name });
+
+      // Simpan ke Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        name,
+        email,
+        createdAt: Date.now(),
+        avatarUrl: '',
+        about: '',
+        socialUrl: '',
+      });
+
+      localStorage.setItem('userId', user.uid); // supaya tidak error di halaman lain
+      navigate('/login');
+
     } catch (err) {
-      setError(err.message)
+      if (err.code === 'auth/email-already-in-use') {
+        setError('Email sudah terdaftar. Silakan login atau gunakan email lain.');
+      } else if (err.code === 'auth/weak-password') {
+        setError('Password terlalu lemah. Gunakan minimal 6 karakter.');
+      } else {
+        console.error('Registration error:', err); // log ke konsol
+        setError('Terjadi kesalahan. Silakan coba lagi.');
+      }
     }
-  }
+  };
 
   const handleGoogleSignIn = async () => {
-    const provider = new GoogleAuthProvider()
+    const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider)
-      navigate('/onboarding/1')
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const isNewUser = result._tokenResponse?.isNewUser;
+  
+      const userDoc = doc(db, 'users', user.uid);
+  
+      if (isNewUser) {
+        // Hanya buat dokumen jika user baru
+        await setDoc(userDoc, {
+          name: user.displayName || '',
+          email: user.email,
+          createdAt: Date.now(),
+          avatarUrl: user.photoURL || '',
+          about: '',
+          socialUrl: '',
+        });
+  
+        localStorage.setItem('userId', user.uid);
+        navigate('/onboarding/1');
+      } else {
+        // Jika user lama, arahkan ke home
+        localStorage.setItem('userId', user.uid);
+        navigate('/home'); // atau '/dashboard' tergantung struktur kamu
+      }
     } catch (err) {
-      setError(err.message)
+      console.error('Google Sign-in error:', err);
+      setError('Gagal masuk dengan Google. Silakan coba lagi.');
     }
-  }
+  };
+  
+
 
   return (
     <AuthLayout title="Daftar Akun">

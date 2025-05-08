@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { db, auth } from '../../services/firebase'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, updateDoc } from 'firebase/firestore'
 
 function Step4_Preview() {
   const navigate = useNavigate()
@@ -13,10 +13,10 @@ function Step4_Preview() {
     const fetchData = async () => {
       const user = auth.currentUser
       if (!user) return
-  
+
       const userRef = doc(db, 'users', user.uid)
       const userSnap = await getDoc(userRef)
-  
+
       if (userSnap.exists()) {
         const data = userSnap.data()
         setUserName(data.name || '')
@@ -24,10 +24,21 @@ function Step4_Preview() {
         setTopics(data.topics || [])
       }
     }
-  
+
     fetchData()
   }, [])
-  
+
+  const handleConfirm = async () => {
+    const user = auth.currentUser
+    if (!user) return
+
+    const userRef = doc(db, 'users', user.uid)
+    await updateDoc(userRef, {
+      isOnboarded: true
+    })
+
+    navigate('/home')
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4">
@@ -47,19 +58,20 @@ function Step4_Preview() {
         </div>
 
         <div className="flex justify-between mt-6">
-  <button
-    onClick={() => navigate('/onboarding/3')}
-    className="text-gray-500 hover:underline"
-  >
-    ← Kembali
-  </button>
-  <button
-    onClick={() => navigate('/home')}
-    className="bg-blue-600 text-white px-4 py-2 rounded"
-  >
-    Konfirmasi & Selesai
-  </button>
-</div>
+          <button
+            onClick={() => navigate('/onboarding/3')}
+            className="text-gray-500 hover:underline"
+          >
+            ← Kembali
+          </button>
+          <button
+            onClick={handleConfirm}
+            className="bg-blue-600 text-white px-4 py-2 rounded"
+          >
+            Konfirmasi & Selesai
+          </button>
+
+        </div>
 
 
         <p className="text-sm text-gray-400">Langkah 4 dari 4 </p>

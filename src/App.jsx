@@ -1,11 +1,9 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import ImportPost from './pages/ImportPost';
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Home from './pages/Home'
 import BuletinDetail from './pages/BuletinDetail'
-import BuletinList from './pages/BuletinList'
 import EditBuletin from './pages/EditBuletin'
 import PublicFeed from './pages/PublicFeed';
 import CreatePost from './pages/CreatePost';
@@ -13,6 +11,7 @@ import CreateBuletins from './pages/CreateBuletins';
 import BookmarkList from './pages/BookmarkList';
 import NotificationPage from './pages/NotificationPage';
 import UserProfile from './pages/UserProfile';
+import UserPublicProfile from './pages/UserPublicProfile';
 import Dashboard from './pages/Dashboard';
 import CreateBuletinStep1 from './pages/CreateBuletinStep1';
 import CreateBuletinStep2 from './pages/CreateBuletinStep2';
@@ -31,7 +30,6 @@ function Router() {
         <Route path="/register" element={<Register />} />
         <Route path="/home" element={<Home />} />
         <Route path="/buletin/:id" element={<BuletinDetail />} />
-        <Route path="/buletin/user/:userName" element={<BuletinList />} />
         <Route path="/edit/:id" element={<EditBuletin />} />
         <Route path="/buletin" element={<PublicFeed />} />
         <Route path="/create" element={<CreatePost />} />
@@ -40,10 +38,10 @@ function Router() {
         <Route path="/notifications" element={<NotificationPage />} />
         <Route path="/profile" element={<UserProfile />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/import-post" element={<ImportPost />} />
         <Route path="/create-buletin" element={<CreateBuletinStep1 />} />
         <Route path="/create-buletin/step-2" element={<CreateBuletinStep2 />} />
         <Route path="/create-buletin/step-3" element={<CreateBuletinStep3 />} />
+        <Route path="/profile/:userId" element={<UserPublicProfile />} />
         {/* Onboarding Steps */}
         <Route path="/onboarding/1" element={<Step1_Welcome />} />
         <Route path="/onboarding/2" element={<Step2_Profile />} />

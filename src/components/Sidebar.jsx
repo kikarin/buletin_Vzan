@@ -5,7 +5,8 @@ const Sidebar = () => {
   const location = useLocation();
   const menuItems = [
     { label: 'Dashboard', path: '/dashboard' },
-    { label: 'Create Buletins', path: '/create-buletins' }, // ← Tambahan
+    { label: 'Create Buletin', path: '/create-buletins' }, // ← Tambahan
+    { label: 'Post Buletin', path: '/create' }, 
     { label: 'Bookmarks', path: '/bookmarks' },
     { label: 'Notifications', path: '/notifications' },
     { label: 'Profile', path: '/profile' },

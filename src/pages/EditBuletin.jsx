@@ -19,52 +19,52 @@ function EditBuletin() {
 
     useEffect(() => {
         const fetchData = async () => {
-            setLoading(true);
-            try {
-                const docRef = doc(db, 'buletins', id);
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    console.log("Data konten yang didapat:", data.content);
-
-                    setTitle(data.title || '');
-                    setSubtitle(data.subtitle || '');
-                    setContent(data.content || '');
-                    setUserName(data.userName || '');
-                    setBuletinName(data.buletinName || '');
-                } else {
-                    alert('❌ Buletin tidak ditemukan.');
-                    navigate('/');
-                }
-            } catch (err) {
-                console.error('Gagal mengambil data:', err);
-                alert('Terjadi kesalahan saat memuat data buletin.');
-            } finally {
-                setLoading(false);
+          setLoading(true);
+          try {
+            const docRef = doc(db, 'posts', id); // 🔄 Ganti dari 'buletins'
+            const docSnap = await getDoc(docRef);
+      
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              console.log("Data konten yang didapat:", data.content);
+      
+              setTitle(data.title || '');
+              setSubtitle(data.subtitle || '');
+              setContent(data.content || '');
+              setUserName(data.userName || '');
+              setBuletinName(data.buletinName || '');
+            } else {
+              alert('❌ Buletin tidak ditemukan.');
+              navigate('/');
             }
+          } catch (err) {
+            console.error('Gagal mengambil data:', err);
+            alert('Terjadi kesalahan saat memuat data buletin.');
+          } finally {
+            setLoading(false);
+          }
         };
-
+      
         fetchData();
-    }, [id, navigate]);
-
-    const handleUpdate = async () => {
+      }, [id, navigate]);
+      
+      const handleUpdate = async () => {
         try {
-            await updateDoc(doc(db, 'buletins', id), {
-                title,
-                subtitle,
-                content,
-                updatedAt: new Date(),
-            });
-
-            alert('✅ Buletin berhasil diperbarui');
-            navigate('/dashboard');
+          await updateDoc(doc(db, 'posts', id), { // 🔄 Ganti dari 'buletins'
+            title,
+            subtitle,
+            content,
+            updatedAt: new Date(),
+          });
+      
+          alert('✅ Buletin berhasil diperbarui');
+          navigate('/dashboard');
         } catch (err) {
-            console.error('Gagal update:', err);
-            alert('❌ Gagal memperbarui buletin.');
+          console.error('Gagal update:', err);
+          alert('❌ Gagal memperbarui buletin.');
         }
-    };
-
+      };
+      
     if (loading) {
         return <p className="text-center py-10">Memuat data buletin...</p>;
     }

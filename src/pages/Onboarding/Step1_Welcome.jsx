@@ -21,7 +21,7 @@ function Step1_Welcome() {
         >
           Mulai Sekarang
         </button>
-        <p className="text-sm text-gray-500">Langkah 1 dari 5</p>
+        <p className="text-sm text-gray-500">Langkah 1 dari 4</p>
       </div>
     </div>
   )

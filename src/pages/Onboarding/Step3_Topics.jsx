@@ -77,7 +77,7 @@ function Step3_Topics() {
           </button>
         </div>
 
-        <p className="text-center text-sm text-gray-400">Langkah 3 dari 5</p>
+        <p className="text-center text-sm text-gray-400">Langkah 3 dari 4</p>
       </div>
     </div>
   )

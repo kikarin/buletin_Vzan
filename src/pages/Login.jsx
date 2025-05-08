@@ -4,6 +4,9 @@ import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 
 import { auth } from '../services/firebase'
 import { useNavigate } from 'react-router-dom'
 import AuthLayout from '../components/AuthLayout'
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../services/firebase';
+
 
 function Login() {
   const navigate = useNavigate()

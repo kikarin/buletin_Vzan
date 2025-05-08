@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
-import { collection, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection,query, where, getDocs, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db, auth } from '../services/firebase';
 
 const allTopics = ['Olahraga', 'Teknologi', 'Lifestyle', 'Finansial', 'Edukasi', 'Seni', 'Lingkungan', 'Politik', 'Kesehatan'];
@@ -12,13 +12,14 @@ function Home() {
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [activeTopic, setActiveTopic] = useState('For You');
   const [showModal, setShowModal] = useState(false);
-  const [buletins, setBuletins] = useState([]);
+  const [posts, setPosts] = useState([]);
+  
 
   useEffect(() => {
     const fetchUserTopics = async () => {
       const user = auth.currentUser;
       if (!user) return;
-  
+
       try {
         const userRef = doc(db, 'users', user.uid);
         const userSnap = await getDoc(userRef);
@@ -32,31 +33,56 @@ function Home() {
         console.error('Gagal ambil topik user:', err);
       }
     };
-  
+
     // fetch hanya setelah auth state siap
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         fetchUserTopics();
       }
     });
-  
+
     return () => unsubscribe(); // cleanup
   }, []);
-  
+
 
   useEffect(() => {
-    const fetchBuletins = async () => {
+    const fetchBuletinsWithAuthors = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, 'buletins'));
-        const fetched = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setBuletins(fetched);
+        const q = query(collection(db, 'posts'), where('isPublic', '==', true));
+        const querySnapshot = await getDocs(q);
+  
+        const postsWithUserData = await Promise.all(
+          querySnapshot.docs.map(async (docSnap) => {
+            const postData = { id: docSnap.id, ...docSnap.data() };
+            let authorData = { userName: 'Unknown', photoURL: null };
+  
+            if (postData.userId) {
+              const userRef = doc(db, 'users', postData.userId);
+              const userSnap = await getDoc(userRef);
+              if (userSnap.exists()) {
+                const data = userSnap.data();
+                authorData = {
+                  userName: data.fullName || data.userName || 'Unknown',
+                  photoURL: data.photoURL || null,
+                };
+              }
+            }
+  
+            return { ...postData, author: authorData };
+          })
+        );
+  
+        setPosts(postsWithUserData);
       } catch (error) {
         console.error('Error fetching buletins:', error);
       }
     };
-
-    fetchBuletins();
+  
+    fetchBuletinsWithAuthors();
   }, []);
+  
+  
+  
 
   const handleTopicToggle = (topic) => {
     const updated = selectedTopics.includes(topic)
@@ -67,7 +93,7 @@ function Home() {
     localStorage.setItem('selectedTopics', JSON.stringify(updated));
   };
 
-  const filteredBuletins = buletins.filter((b) => {
+  const filteredPosts = posts.filter((b) => {
     if (activeTopic === 'For You') {
       return selectedTopics.includes(b.category);
     }
@@ -92,8 +118,8 @@ function Home() {
             <button
               onClick={() => setActiveTopic('For You')}
               className={`px-4 py-2 rounded-full border ${activeTopic === 'For You'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700'
                 }`}
             >
               For You
@@ -103,8 +129,8 @@ function Home() {
                 key={topic}
                 onClick={() => setActiveTopic(topic)}
                 className={`px-4 py-2 rounded-full border ${activeTopic === topic
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700'
                   }`}
               >
                 {topic}
@@ -120,12 +146,12 @@ function Home() {
 
           {/* Buletin List */}
           <div className="mt-6 space-y-4">
-            {filteredBuletins.length === 0 ? (
+            {filteredPosts.length === 0 ? (
               <p className="text-center text-gray-500">
                 Tidak ada buletin untuk topik ini.
               </p>
             ) : (
-              filteredBuletins.map((b) => (
+              filteredPosts.map((b) => (
                 <div
                   key={b.id}
                   onClick={() => navigate(`/buletin/${b.id}`)}
