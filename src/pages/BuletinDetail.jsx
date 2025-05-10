@@ -1,203 +1,125 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import {
-  doc, getDoc, updateDoc, arrayUnion, collection, addDoc, getDocs, deleteDoc, setDoc
-} from 'firebase/firestore';
-import { db } from '../services/firebase';
-import { onAuthStateChanged, getAuth } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
+import { useBuletinDetail } from '../hooks/useBuletinDetail';
 import BuletinContent from '../components/BuletinContent';
 import LikeButton from '../components/LikeButton';
 import BookmarkButton from '../components/BookmarkButton';
 import CommentSection from '../components/CommentSection';
+import BackButton from '../components/BackButton';
+import { Link } from 'react-router-dom';
 
 function BuletinDetail() {
-  const { id } = useParams();
   const navigate = useNavigate();
-  const auth = getAuth();
+  const {
+    loading,
+    buletin,
+    liked,
+    likeCount,
+    bookmarked,
+    comments,
+    newComment,
+    setNewComment,
+    handleToggleLike,
+    handleToggleBookmark,
+    handleSubmitComment,
+    handleSubmitReply,
+  } = useBuletinDetail();
 
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [buletin, setBuletin] = useState(null);
-
-  const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
-  const [bookmarked, setBookmarked] = useState(false);
-  const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState('');
-
-  // Dengarkan perubahan auth dan set user
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-    });
-    return () => unsubscribe();
-  }, [auth]);
-
-  // Ambil buletin setelah user terdeteksi
-  useEffect(() => {
-    const fetchBuletin = async () => {
-      if (!id || !user) return;
-
-      try {
-        const docRef = doc(db, 'posts', id);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setBuletin({ id: docSnap.id, ...data });
-          setLikeCount(data.likes?.length || 0);
-          setLiked(data.likes?.includes(user.uid));
-          setBookmarked(data.bookmarks?.includes(user.uid));
-        }
-
-        const commentRef = collection(db, 'posts', id, 'comments');
-        const commentSnap = await getDocs(commentRef);
-        const commentList = commentSnap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setComments(commentList);
-      } catch (err) {
-        console.error("Gagal ambil data buletin:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBuletin();
-  }, [id, user]);
-
-  const handleToggleLike = async () => {
-    const docRef = doc(db, 'posts', id);
-    const updatedLikes = liked
-      ? buletin.likes.filter(uid => uid !== user.uid)
-      : [...(buletin.likes || []), user.uid];
-
-    await updateDoc(docRef, { likes: updatedLikes });
-    setLiked(!liked);
-    setLikeCount(updatedLikes.length);
-    setBuletin(prev => ({ ...prev, likes: updatedLikes }));
-  };
-
-  const handleToggleBookmark = async () => {
-    const postRef = doc(db, 'posts', id);
-    const userBookmarkRef = doc(db, 'users', user.uid, 'bookmarks', id); // ref ke subkoleksi bookmark
-
-    const updatedBookmarks = bookmarked
-      ? buletin.bookmarks.filter(uid => uid !== user.uid)
-      : [...(buletin.bookmarks || []), user.uid];
-
+  const handleShare = async () => {
+    const url = window.location.href;
     try {
-      await updateDoc(postRef, { bookmarks: updatedBookmarks });
-
-      if (bookmarked) {
-        // Hapus dari koleksi bookmark user
-        await deleteDoc(userBookmarkRef);
+      if (navigator.share) {
+        await navigator.share({
+          title: buletin?.title || 'Buletin',
+          text: buletin?.subtitle || 'Lihat buletin ini',
+          url: url,
+        });
       } else {
-        // Tambah ke koleksi bookmark user
-        await setDoc(userBookmarkRef, { bookmarkedAt: new Date() });
+        await navigator.clipboard.writeText(url);
+        alert('Link berhasil disalin!');
       }
-
-      setBookmarked(!bookmarked);
-      setBuletin(prev => ({ ...prev, bookmarks: updatedBookmarks }));
     } catch (err) {
-      console.error("Gagal toggle bookmark:", err);
+      console.error('Error sharing:', err);
     }
   };
 
-  const handleSubmitComment = async () => {
-    if (!newComment.trim()) return;
-
-    const comment = {
-      userId: user.uid,
-      userName: user.displayName || 'Anonim',
-      content: newComment,
-      createdAt: new Date(),
-      replies: []
-    };
-
-    const commentRef = collection(db, 'posts', id, 'comments');
-    const docRef = await addDoc(commentRef, comment);
-    setComments(prev => [...prev, { id: docRef.id, ...comment }]);
-    setNewComment('');
-
-    // Kirim notifikasi ke pemilik buletin (jika bukan komentator sendiri)
-    if (buletin.userId !== user.uid) {
-      const notifRef = doc(collection(db, 'users', buletin.userId, 'notifications'));
-      await setDoc(notifRef, {
-        fromUser: user.displayName || 'Anonim',
-        buletinId: buletin.id,
-        buletinTitle: buletin.title,
-        isRead: false,
-        createdAt: new Date()
-      });
-    }
-  };
-
-
-  const handleSubmitReply = async (commentId, replyText) => {
-    const commentDoc = doc(db, 'posts', id, 'comments', commentId);
-    const reply = {
-      id: Date.now().toString(),
-      userId: user.uid,
-      userName: user.displayName || 'Anonim',
-      content: replyText
-    };
-
-    await updateDoc(commentDoc, {
-      replies: arrayUnion(reply)
-    });
-
-    setComments(prev =>
-      prev.map(comment =>
-        comment.id === commentId
-          ? { ...comment, replies: [...(comment.replies || []), reply] }
-          : comment
-      )
-    );
-  };
-
-  if (loading) return <p className="text-center mt-10">Loading detail...</p>;
-  if (!buletin) return <p className="text-center mt-10">Buletin tidak ditemukan.</p>;
+  if (loading) return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>
+  );
+  
+  if (!buletin) return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <p className="text-gray-600">Buletin tidak ditemukan.</p>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-white px-4 py-8">
-      <div className="max-w-3xl mx-auto">
-        <button className="text-blue-600 hover:underline mb-4" onClick={() => navigate(-1)}>
-          ← Kembali
-        </button>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          {/* Header */}
+          <div className="p-6 border-b">
+            <BackButton onClick={() => navigate(-1)} />
+            <div className="mt-4 flex items-center gap-3 mb-4">
+              <Link to={`/profile/${buletin.userId}`}>
+                <img
+                  src={buletin.buletinProfileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(buletin.buletinName || 'B')}`}
+                  alt={buletin.buletinName}
+                  className="w-12 h-12 rounded-full object-cover border-2 border-blue-100 hover:scale-105 transition"
+                />
+              </Link>
+              <div>
+                <h2 className="text-xl font-semibold text-blue-600">{buletin.buletinName}</h2>
+                <span className="text-sm text-gray-600">
+                  Ditulis oleh: <Link to={`/profile/${buletin.userId}`} className="text-blue-600 hover:underline">{buletin.userName || 'Penulis'}</Link>
+                </span>
+                <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
+                  <span>{new Date(buletin.createdAt?.toDate?.() || buletin.createdAt).toLocaleDateString('id-ID', {
+                    year: 'numeric', month: 'long', day: 'numeric'
+                  })}</span>
+                  <span>•</span>
+                  <span>{buletin.category}</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        <BuletinContent buletin={buletin} />
+          {/* Content */}
+          <div className="p-6">
+            <BuletinContent buletin={buletin} />
+          </div>
 
-        {/* Tautan ke profil penulis */}
-        <div className="my-4">
-          <span className="text-gray-600 text-sm">Ditulis oleh: </span>
-          <Link
-            to={`/profile/${buletin.userId}`}
-            className="text-blue-600 hover:underline text-sm"
-          >
-            {buletin.userName || 'Penulis'}
-          </Link>
+          {/* Actions */}
+          <div className="p-6 border-t bg-gray-50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <LikeButton liked={liked} likeCount={likeCount} onToggle={handleToggleLike} />
+                <BookmarkButton bookmarked={bookmarked} onToggle={handleToggleBookmark} />
+              </div>
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" />
+                </svg>
+                Bagikan
+              </button>
+            </div>
+          </div>
+
+          {/* Comments */}
+          <div className="p-6 border-t">
+            <CommentSection
+              comments={comments}
+              newComment={newComment}
+              setNewComment={setNewComment}
+              onSubmitComment={handleSubmitComment}
+              onSubmitReply={handleSubmitReply}
+            />
+          </div>
         </div>
-
-
-        <BuletinContent buletin={buletin} />
-        <LikeButton
-          liked={liked}
-          likeCount={likeCount}
-          onToggle={handleToggleLike}
-        />
-        <BookmarkButton
-          bookmarked={bookmarked}
-          onToggle={handleToggleBookmark}
-        />
-
-        <CommentSection
-          comments={comments}
-          newComment={newComment}
-          setNewComment={setNewComment}
-          onSubmitComment={handleSubmitComment}
-          onSubmitReply={handleSubmitReply}
-        />
       </div>
     </div>
   );

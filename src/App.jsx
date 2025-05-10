@@ -1,11 +1,11 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Landing from './pages/Landing'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import Home from './pages/Home'
-import BuletinDetail from './pages/BuletinDetail'
-import EditBuletin from './pages/EditBuletin'
-import PublicFeed from './pages/PublicFeed';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import Landing from './pages/Landing';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Home from './pages/Home';
+import BuletinDetail from './pages/BuletinDetail';
+import EditBuletin from './pages/EditBuletin';
 import CreatePost from './pages/CreatePost';
 import CreateBuletins from './pages/CreateBuletins';
 import BookmarkList from './pages/BookmarkList';
@@ -16,42 +16,45 @@ import Dashboard from './pages/Dashboard';
 import CreateBuletinStep1 from './pages/CreateBuletinStep1';
 import CreateBuletinStep2 from './pages/CreateBuletinStep2';
 import CreateBuletinStep3 from './pages/CreateBuletinStep3';
-import Step1_Welcome from './pages/Onboarding/Step1_Welcome'
-import Step2_Profile from './pages/Onboarding/Step2_Profile'
-import Step3_Topics from './pages/Onboarding/Step3_Topics'
-import Step4_Preview from './pages/Onboarding/Step4_Preview'
+import Step1_Welcome from './pages/Onboarding/Step1_Welcome';
+import Step2_Profile from './pages/Onboarding/Step2_Profile';
+import Step3_Topics from './pages/Onboarding/Step3_Topics';
+import Step4_Preview from './pages/Onboarding/Step4_Preview';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function Router() {
   return (
     <BrowserRouter>
+      {/* ✅ Toast notification provider di sini */}
+      <Toaster position="top-right" reverseOrder={false} />
+      
       <Routes>
+        {/* Public routes */}
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/buletin/:id" element={<BuletinDetail />} />
-        <Route path="/edit/:id" element={<EditBuletin />} />
-        <Route path="/buletin" element={<PublicFeed />} />
-        <Route path="/create" element={<CreatePost />} />
-        <Route path="/create-buletins" element={<CreateBuletins />} />
-        <Route path="/bookmarks" element={<BookmarkList />} />
-        <Route path="/notifications" element={<NotificationPage />} />
-        <Route path="/profile" element={<UserProfile />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/create-buletin" element={<CreateBuletinStep1 />} />
-        <Route path="/create-buletin/step-2" element={<CreateBuletinStep2 />} />
-        <Route path="/create-buletin/step-3" element={<CreateBuletinStep3 />} />
-        <Route path="/profile/:userId" element={<UserPublicProfile />} />
-        {/* Onboarding Steps */}
-        <Route path="/onboarding/1" element={<Step1_Welcome />} />
-        <Route path="/onboarding/2" element={<Step2_Profile />} />
-        <Route path="/onboarding/3" element={<Step3_Topics />} />
-        <Route path="/onboarding/4" element={<Step4_Preview />} />
-        {/* Add more routes as needed */}
 
+        {/* Protected routes */}
+        <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+        <Route path="/buletin/:id" element={<ProtectedRoute><BuletinDetail /></ProtectedRoute>} />
+        <Route path="/edit/:id" element={<ProtectedRoute><EditBuletin /></ProtectedRoute>} />
+        <Route path="/create" element={<ProtectedRoute><CreatePost /></ProtectedRoute>} />
+        <Route path="/create-buletins" element={<ProtectedRoute><CreateBuletins /></ProtectedRoute>} />
+        <Route path="/bookmarks" element={<ProtectedRoute><BookmarkList /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><NotificationPage /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/create-buletin" element={<ProtectedRoute><CreateBuletinStep1 /></ProtectedRoute>} />
+        <Route path="/create-buletin/step-2" element={<ProtectedRoute><CreateBuletinStep2 /></ProtectedRoute>} />
+        <Route path="/create-buletin/step-3" element={<ProtectedRoute><CreateBuletinStep3 /></ProtectedRoute>} />
+        <Route path="/profile/:userId" element={<ProtectedRoute><UserPublicProfile /></ProtectedRoute>} />
+        <Route path="/onboarding/1" element={<ProtectedRoute><Step1_Welcome /></ProtectedRoute>} />
+        <Route path="/onboarding/2" element={<ProtectedRoute><Step2_Profile /></ProtectedRoute>} />
+        <Route path="/onboarding/3" element={<ProtectedRoute><Step3_Topics /></ProtectedRoute>} />
+        <Route path="/onboarding/4" element={<ProtectedRoute><Step4_Preview /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
-export default Router
+export default Router;

@@ -18,7 +18,7 @@ function BookmarkList() {
         const bookmarkData = await Promise.all(
           snapshot.docs.map(async (docSnap) => {
             const buletinId = docSnap.id;
-            const buletinRef = doc(db, 'posts', buletinId); // <--- PERBAIKI INI
+            const buletinRef = doc(db, 'posts', buletinId);
             const buletinSnap = await getDoc(buletinRef);
             return buletinSnap.exists()
               ? { id: buletinId, ...buletinSnap.data() }
@@ -33,7 +33,6 @@ function BookmarkList() {
       }
     };
 
-
     fetchBookmarks();
   }, [userId]);
 
@@ -47,13 +46,27 @@ function BookmarkList() {
       ) : (
         <ul className="space-y-4">
           {bookmarks.map((b) => (
-            <li key={b.id} className="border rounded p-4 hover:shadow">
-              <Link to={`/buletin/${b.id}`} className="text-xl font-semibold text-blue-600 hover:underline">
-                {b.buletinName}
-              </Link>
-              <p className="text-sm text-gray-600 mt-1">
-                {b.content ? b.content.replace(/<[^>]+>/g, '').slice(0, 100) + '...' : 'Tidak ada konten'}
-              </p>
+            <li key={b.id} className="border rounded p-4 hover:shadow flex items-center gap-4">
+              <img
+                src={b.buletinProfileImage || b.profileImageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(b.buletinName || 'B')}`}
+                alt={b.buletinName}
+                className="w-10 h-10 rounded-full object-cover border"
+              />
+              <div className="flex-1">
+                <Link to={`/buletin/${b.id}`} className="text-xl font-semibold text-blue-600 hover:underline">
+                  {b.buletinName}
+                </Link>
+                <p className="text-sm text-gray-600 mt-1">
+                  {b.content
+                    ? b.content
+                        .replace(/<[^>]+>/g, '')
+                        .replace(/&nbsp;/g, ' ')
+                        .replace(/\s+/g, ' ')
+                        .trim()
+                        .slice(0, 100) + '...'
+                    : 'Tidak ada konten'}
+                </p>
+              </div>
             </li>
           ))}
         </ul>

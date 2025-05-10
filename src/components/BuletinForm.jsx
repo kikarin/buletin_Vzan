@@ -1,7 +1,15 @@
 // src/components/BuletinForm.jsx
 import { useState } from 'react';
 
-const BuletinForm = ({ onSubmit, loading, initialForm = {}, buttonLabel = "Submit" }) => {
+const BuletinForm = ({ 
+  onSubmit, 
+  loading, 
+  initialForm = {}, 
+  buttonLabel = "Submit",
+  onImageUpload,
+  uploading,
+  error 
+}) => {
   const topicList = JSON.parse(localStorage.getItem('selectedTopics')) || [];
 
   const [form, setForm] = useState({
@@ -13,8 +21,28 @@ const BuletinForm = ({ onSubmit, loading, initialForm = {}, buttonLabel = "Submi
     ...initialForm,
   });
 
+  const [previewImage, setPreviewImage] = useState(initialForm.profileImageUrl || '');
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Preview gambar
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewImage(reader.result);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload ke Cloudinary
+    const imageUrl = await onImageUpload(file);
+    if (imageUrl) {
+      setForm(prev => ({ ...prev, profileImageUrl: imageUrl }));
+    }
   };
 
   const handleSubmit = () => {
@@ -22,91 +50,117 @@ const BuletinForm = ({ onSubmit, loading, initialForm = {}, buttonLabel = "Submi
   };
 
   return (
-    <div className="space-y-4">
-      <div>
-        <label className="block font-medium">Profile Buletin (Image URL)</label>
-        <input
-          type="text"
-          name="profileImageUrl"
-          value={form.profileImageUrl}
-          onChange={handleChange}
-          placeholder="https://..."
-          className="w-full border px-3 py-2 rounded"
-        />
+    <div className="space-y-6 text-sm text-gray-700">
+      {/* Upload Section (Centered) */}
+      <div className="flex justify-center">
+        <div className="relative w-24 h-24 rounded-full border-4 border-blue-500 overflow-hidden bg-gray-100">
+          {previewImage ? (
+            <img
+              src={previewImage}
+              alt="Preview"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+              No Image
+            </div>
+          )}
+          <label
+            htmlFor="profile-upload"
+            className="absolute -bottom-1 -right-1 bg-blue-600 hover:bg-blue-700 text-white p-1 rounded-full cursor-pointer shadow"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+            </svg>
+          </label>
+          <input
+            id="profile-upload"
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="hidden"
+            disabled={uploading}
+          />
+        </div>
       </div>
-
+      {uploading && <p className="text-center text-xs text-gray-500">Mengupload gambar...</p>}
+      {error && <p className="text-center text-xs text-red-500">{error}</p>}
+  
+      {/* Buletin Name */}
       <div>
-        <label className="block font-medium">Buletin Name</label>
+        <label className="block font-semibold mb-1">Nama Buletin</label>
         <input
           type="text"
           name="buletinName"
           value={form.buletinName}
           onChange={handleChange}
-          placeholder="Unique name"
-          className="w-full border px-3 py-2 rounded"
+          placeholder="Contoh: Finansial Cerdas"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
         />
       </div>
-
+  
+      {/* Description */}
       <div>
-        <label className="block font-medium">Short Description</label>
+        <label className="block font-semibold mb-1">Deskripsi Singkat</label>
         <textarea
           name="description"
           value={form.description}
           onChange={handleChange}
-          placeholder="Briefly describe..."
-          className="w-full border px-3 py-2 rounded"
+          placeholder="Ceritakan secara singkat tentang buletin kamu"
+          rows={3}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"
         />
       </div>
-
+  
+      {/* Category */}
       <div>
-        <label className="block font-medium">Select Category</label>
+        <label className="block font-semibold mb-1">Kategori</label>
         {topicList.length === 0 ? (
-          <p className="text-red-500 text-sm">
-            Kamu belum memilih topik. Silakan kembali ke onboarding untuk memilih kategori terlebih dahulu.
-          </p>
+          <p className="text-sm text-red-500">Kamu belum memilih topik. Silakan selesaikan onboarding dulu.</p>
         ) : (
           <select
             name="category"
             value={form.category}
             onChange={handleChange}
-            className="w-full border px-3 py-2 rounded"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
           >
             <option value="">-- Pilih kategori --</option>
             {topicList.map((topic) => (
-              <option key={topic} value={topic}>
-                {topic}
-              </option>
+              <option key={topic} value={topic}>{topic}</option>
             ))}
           </select>
         )}
       </div>
-
+  
+      {/* Custom URL */}
       <div>
-        <label className="block font-medium">Buletin URL</label>
-        <div className="flex items-center">
-          <span className="px-3 py-2 bg-gray-100 border border-r-0 rounded-l">
-            https://buletin.co/
+        <label className="block font-semibold mb-1">URL Buletin</label>
+        <div className="flex">
+          <span className="px-4 py-2 bg-gray-100 border border-r-0 rounded-l-lg text-sm text-gray-500">
+            buletin.co/
           </span>
           <input
             type="text"
             name="customUrl"
             value={form.customUrl}
             onChange={handleChange}
-            placeholder="your-buletin"
-            className="w-full border px-3 py-2 rounded-r"
+            placeholder="nama-kustom"
+            className="w-full px-4 py-2 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 outline-none"
           />
         </div>
       </div>
-
+  
+      {/* Submit Button */}
       <button
         onClick={handleSubmit}
-        disabled={loading}
-        className="mt-6 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+        disabled={loading || uploading}
+        className="w-full mt-4 py-2 rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:brightness-110 transition disabled:opacity-50"
       >
-        {loading ? 'Saving...' : buttonLabel}
+        {loading ? 'Menyimpan...' : buttonLabel}
       </button>
     </div>
   );
+    
 };
 
 export default BuletinForm;

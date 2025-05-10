@@ -6,6 +6,8 @@ import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { onAuthStateChanged } from 'firebase/auth';
 import { saveBuletin } from '../services/saveBuletin';
+import axios from 'axios';
+import CLOUDINARY_CONFIG from '../services/cloudinary';
 
 function CreatePost() {
     const navigate = useNavigate();
@@ -19,6 +21,7 @@ function CreatePost() {
     const [content, setContent] = useState('');
     const [isPublic, setIsPublic] = useState(true);
     const [saved, setSaved] = useState(false);
+    const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -79,6 +82,52 @@ function CreatePost() {
         }
     };
 
+    const uploadAdapter = (loader) => {
+        return {
+            upload: async () => {
+                try {
+                    setUploading(true);
+                    const file = await loader.file;
+                    
+                    // Validasi tipe file
+                    if (!file.type.match('image.*')) {
+                        throw new Error('File harus berupa gambar');
+                    }
+
+                    // Validasi ukuran file (max 5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        throw new Error('Ukuran file maksimal 5MB');
+                    }
+
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
+                    formData.append('cloud_name', CLOUDINARY_CONFIG.cloudName);
+
+                    const response = await axios.post(
+                        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/image/upload`,
+                        formData
+                    );
+
+                    return {
+                        default: response.data.secure_url
+                    };
+                } catch (error) {
+                    console.error('Gagal upload gambar:', error);
+                    throw error;
+                } finally {
+                    setUploading(false);
+                }
+            }
+        };
+    };
+
+    function uploadPlugin(editor) {
+        editor.plugins.get('FileRepository').createUploadAdapter = (loader) => {
+            return uploadAdapter(loader);
+        };
+    }
+
     return (
         <div className="min-h-screen bg-white px-4 py-8 flex flex-col items-center">
             <div className="max-w-2xl w-full space-y-6">
@@ -134,6 +183,34 @@ function CreatePost() {
                             const data = editor.getData();
                             setContent(data);
                         }}
+                        config={{
+                            extraPlugins: [uploadPlugin],
+                            toolbar: {
+                                items: [
+                                    'heading',
+                                    '|',
+                                    'bold',
+                                    'italic',
+                                    'link',
+                                    'bulletedList',
+                                    'numberedList',
+                                    '|',
+                                    'imageUpload',
+                                    'blockQuote',
+                                    'insertTable',
+                                    'undo',
+                                    'redo'
+                                ]
+                            },
+                            image: {
+                                toolbar: [
+                                    'imageTextAlternative',
+                                    'imageStyle:inline',
+                                    'imageStyle:block',
+                                    'imageStyle:side'
+                                ]
+                            }
+                        }}
                     />
                 </div>
 
@@ -150,9 +227,10 @@ function CreatePost() {
                 <div className="flex justify-between items-center">
                     <button
                         onClick={handleSave}
-                        className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
+                        disabled={uploading}
+                        className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 disabled:opacity-50"
                     >
-                        Simpan
+                        {uploading ? 'Mengupload...' : 'Simpan'}
                     </button>
                     <button
                         onClick={() => navigate('/home')}

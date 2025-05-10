@@ -1,34 +1,55 @@
 // src/pages/Landing.jsx
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react';
+import NavbarSection from '../components/NavbarSection';
+import HeroSection from '../components/HeroSection';
+import HeroBackground from '../components/HeroBackground';
+import AboutSection from '../components/AboutSection';
+import ContentTypesSection from '../components/ContentTypesSection';
+import CallToActionSection from '../components/CallToActionSection';
+import Footer from '../components/Footer';
+import CookieBanner from '../components/CookieBanner';
 
 function Landing() {
-  const navigate = useNavigate()
+  const [showCookies, setShowCookies] = useState(false);
+
+  useEffect(() => {
+    const accepted = localStorage.getItem('acceptCookies');
+    setShowCookies(!accepted);
+  }, []);
+
+  const handleAcceptCookies = () => {
+    localStorage.setItem('acceptCookies', 'true');
+    setShowCookies(false);
+  };
+
+  const handleRejectCookies = () => {
+    localStorage.setItem('acceptCookies', 'rejected');
+    setShowCookies(false);
+  };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-gradient-to-br from-blue-100 to-white">
-      <div className="max-w-xl text-center space-y-6">
-        <h1 className="text-4xl font-bold text-blue-700">Selamat Datang di Buletin.co</h1>
-        <p className="text-gray-600 text-lg">
-          Buat dan kelola buletinmu, bangun komunitas lewat tulisan, dan temukan pembaca yang tepat.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
-          <button
-            onClick={() => navigate('/register')}
-            className="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition"
-          >
-            Mulai Sekarang
-          </button>
-          <button
-            onClick={() => navigate('/login')}
-            className="border border-blue-600 text-blue-600 px-6 py-3 rounded hover:bg-blue-50 transition"
-          >
-            Sudah Punya Akun?
-          </button>
-        </div>
+    <div className="font-sans relative min-h-screen overflow-hidden">
+      {/* Navbar */}
+      <NavbarSection />
+      {/* Global Background */}
+      <div className="absolute inset-0 -z-10">
+        <HeroBackground />
       </div>
+
+      {/* Page Content */}
+      <HeroSection />
+      <AboutSection />
+      <ContentTypesSection />
+      <CallToActionSection />
+      <Footer />
+      <CookieBanner
+        show={showCookies}
+        onAccept={handleAcceptCookies}
+        onReject={handleRejectCookies}
+      />
     </div>
-  )
+
+  );
 }
 
-export default Landing
+export default Landing;
