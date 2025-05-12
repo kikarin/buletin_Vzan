@@ -23,6 +23,7 @@ import Step4_Preview from './pages/Onboarding/Step4_Preview';
 import ProtectedRoute from './components/ProtectedRoute';
 import MyBulletins from './pages/MyBulletins';
 import EditBuletins from './pages/EditBuletins';
+import NotFound from './pages/NotFound';
 
 function Router() {
   return (
@@ -58,6 +59,9 @@ function Router() {
         <Route path="/onboarding/2" element={<ProtectedRoute><Step2_Profile /></ProtectedRoute>} />
         <Route path="/onboarding/3" element={<ProtectedRoute><Step3_Topics /></ProtectedRoute>} />
         <Route path="/onboarding/4" element={<ProtectedRoute><Step4_Preview /></ProtectedRoute>} />
+
+        {/* 404 - Catch all route */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );
