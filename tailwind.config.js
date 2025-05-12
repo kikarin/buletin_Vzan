@@ -4,6 +4,7 @@ export default {
   theme: {
     extend: {
       animation: {
+        'ping-once': 'ping-once 0.2s ease-out forwards',
         'bubble-move': 'bubbleFloat 10s ease-in-out infinite',
         'pulse-slow': 'pulse 4s infinite',
         "fade-in": "fadeIn 1.2s ease-out forwards",
@@ -16,6 +17,10 @@ export default {
         gradient: 'gradientMove 4s ease infinite',
       },
       keyframes: {
+        'ping-once': {
+          '0%': { transform: 'scale(0.6)' },
+          '100%': { transform: 'scale(1.1)' }
+        },
         float: {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-10px)" },

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import clsx from 'clsx'; // pastikan sudah install: npm install clsx
+import clsx from 'clsx';
 
 function CreateBuletinStep2() {
   const navigate = useNavigate();
@@ -103,7 +103,7 @@ function CreateBuletinStep2() {
 }
 
 function PlanCard({ title, price, credits, selected, onSelect, isFree = false }) {
-  const value = title.toLowerCase().split(' ')[0]; // 'basic', 'standard', etc.
+  const value = title.toLowerCase().split(' ')[0];
 
   const getAccent = () => {
     switch (value) {

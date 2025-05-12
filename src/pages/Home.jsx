@@ -1,20 +1,40 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import { collection, query, where, getDocs, doc, getDoc, updateDoc, orderBy } from 'firebase/firestore';
-import { db, auth } from '../services/firebase';
-import UserRecommendations from '../components/UserRecommendations';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  getDoc,
+  updateDoc,
+  orderBy,
+} from "firebase/firestore";
+import { db, auth } from "../services/firebase";
+import UserRecommendations from "../components/UserRecommendations";
 
-const allTopics = ['Olahraga', 'Teknologi', 'Lifestyle', 'Finansial', 'Edukasi', 'Seni', 'Lingkungan', 'Politik', 'Kesehatan'];
+const allTopics = [
+  "Sosial",
+  "Olahraga",
+  "Teknologi",
+  "Lifestyle",
+  "Finansial",
+  "Edukasi",
+  "Seni",
+  "Lingkungan",
+  "Politik",
+  "Kesehatan",
+];
 
 function Home() {
   const navigate = useNavigate();
-  const [userName, setUserName] = useState('');
+  const [userName, setUserName] = useState("");
   const [selectedTopics, setSelectedTopics] = useState([]);
-  const [activeTopic, setActiveTopic] = useState('For You');
+  const [activeTopic, setActiveTopic] = useState("For You");
   const [showModal, setShowModal] = useState(false);
   const [posts, setPosts] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 10;
@@ -26,15 +46,15 @@ function Home() {
       if (!user) return;
 
       try {
-        const userRef = doc(db, 'users', user.uid);
+        const userRef = doc(db, "users", user.uid);
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {
           const data = userSnap.data();
-          setUserName(data.name || '');
-          localStorage.setItem('userName', data.name || '');
+          setUserName(data.name || "");
+          localStorage.setItem("userName", data.name || "");
         }
       } catch (err) {
-        console.error('Gagal ambil data user:', err);
+        console.error("Gagal ambil data user:", err);
       }
     };
 
@@ -53,16 +73,16 @@ function Home() {
       if (!user) return;
 
       try {
-        const userRef = doc(db, 'users', user.uid);
+        const userRef = doc(db, "users", user.uid);
         const userSnap = await getDoc(userRef);
         if (userSnap.exists()) {
           const data = userSnap.data();
           const topics = data.topics || [];
           setSelectedTopics(topics);
-          localStorage.setItem('selectedTopics', JSON.stringify(topics));
+          localStorage.setItem("selectedTopics", JSON.stringify(topics));
         }
       } catch (err) {
-        console.error('Gagal ambil topik user:', err);
+        console.error("Gagal ambil topik user:", err);
       }
     };
 
@@ -79,10 +99,7 @@ function Home() {
     const fetchPublicPosts = async () => {
       setLoading(true);
       try {
-        const q = query(
-          collection(db, 'posts'),
-          where('isPublic', '==', true)
-        );
+        const q = query(collection(db, "posts"), where("isPublic", "==", true));
 
         const querySnapshot = await getDocs(q);
         const postList = querySnapshot.docs
@@ -91,14 +108,14 @@ function Home() {
             return {
               id: docSnap.id,
               ...data,
-              createdAt: data.createdAt?.toDate?.() || new Date()
+              createdAt: data.createdAt?.toDate?.() || new Date(),
             };
           })
           .sort((a, b) => b.createdAt - a.createdAt);
 
         setPosts(postList);
       } catch (error) {
-        console.error('Error fetching posts:', error);
+        console.error("Error fetching posts:", error);
       } finally {
         setLoading(false);
       }
@@ -112,33 +129,32 @@ function Home() {
     if (!user) return;
 
     const updated = selectedTopics.includes(topic)
-      ? selectedTopics.filter(t => t !== topic)
+      ? selectedTopics.filter((t) => t !== topic)
       : [...selectedTopics, topic];
 
     setSelectedTopics(updated);
-    localStorage.setItem('selectedTopics', JSON.stringify(updated));
+    localStorage.setItem("selectedTopics", JSON.stringify(updated));
 
-    // Update di Firestore
     try {
-      const userRef = doc(db, 'users', user.uid);
+      const userRef = doc(db, "users", user.uid);
       await updateDoc(userRef, { topics: updated });
     } catch (err) {
-      console.error('Gagal update topik:', err);
+      console.error("Gagal update topik:", err);
     }
 
-    // Jika topic yang diuncheck adalah active topic, reset ke 'For You'
     if (activeTopic === topic) {
-      setActiveTopic('For You');
+      setActiveTopic("For You");
     }
   };
 
-  // Filter posts berdasarkan topik dan pencarian
   const filteredPosts = posts.filter((b) => {
-    const matchesTopic = activeTopic === 'For You'
-      ? selectedTopics.includes(b.category)
-      : b.category === activeTopic;
+    const matchesTopic =
+      activeTopic === "For You"
+        ? selectedTopics.includes(b.category)
+        : b.category === activeTopic;
 
-    const matchesSearch = searchQuery === '' ||
+    const matchesSearch =
+      searchQuery === "" ||
       b.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       b.subtitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       b.content?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -148,7 +164,6 @@ function Home() {
     return matchesTopic && matchesSearch;
   });
 
-  // Pagination logic
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
@@ -156,7 +171,7 @@ function Home() {
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -169,7 +184,7 @@ function Home() {
             {/* Greeting Text */}
             <div className="text-center mb-4">
               <h1 className="text-3xl font-bold text-gray-800">
-                Good to see you,&nbsp;
+                Senang bertemu denganmu,&nbsp;
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
                   {userName}
                 </span>
@@ -184,10 +199,10 @@ function Home() {
               {/* Horizontal Scrollable Topics */}
               <div className="flex overflow-x-auto gap-2 whitespace-nowrap px-1 pb-1 scrollbar-hide">
                 <button
-                  onClick={() => setActiveTopic('For You')}
-                  className={`flex-shrink-0 px-4 py-2 rounded-full border text-sm font-medium ${activeTopic === 'For You'
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  onClick={() => setActiveTopic("For You")}
+                  className={`flex-shrink-0 px-4 py-2 rounded-full border text-sm font-medium ${activeTopic === "For You"
+                      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                     }`}
                 >
                   For You
@@ -197,8 +212,8 @@ function Home() {
                     key={topic}
                     onClick={() => setActiveTopic(topic)}
                     className={`min-w-max flex-shrink-0 px-4 py-2 rounded-full border text-sm font-medium ${activeTopic === topic
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                       }`}
                   >
                     {topic}
@@ -214,7 +229,12 @@ function Home() {
                   className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-300 hover:bg-gray-100 transition"
                   aria-label="Toggle Search"
                 >
-                  <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="w-5 h-5 text-gray-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -249,7 +269,9 @@ function Home() {
 
             {/* Toggleable Search Input */}
             <div
-              className={`transition-all duration-300 overflow-hidden ${showSearch ? 'mb-2 max-h-[100px] opacity-100' : 'max-h-0 opacity-0'
+              className={`transition-all duration-300 overflow-hidden ${showSearch
+                  ? "mb-2 max-h-[100px] opacity-100"
+                  : "max-h-0 opacity-0"
                 }`}
             >
               <div className="relative">
@@ -287,8 +309,8 @@ function Home() {
               ) : currentPosts.length === 0 ? (
                 <div className="text-center text-gray-500 text-sm bg-white/60 backdrop-blur-md py-8 rounded-xl border border-gray-100 shadow">
                   {searchQuery
-                    ? 'Tidak ada buletin yang cocok dengan pencarian.'
-                    : 'Tidak ada buletin untuk topik ini.'}
+                    ? "Tidak ada buletin yang cocok dengan pencarian."
+                    : "Tidak ada buletin untuk topik ini."}
                 </div>
               ) : (
                 currentPosts.map((b) => (
@@ -307,19 +329,23 @@ function Home() {
                           <img
                             src={
                               b.buletinProfileImage ||
-                              `https://ui-avatars.com/api/?name=${encodeURIComponent(b.buletinName || 'B')}`
+                              `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                b.buletinName || "B"
+                              )}`
                             }
                             alt={b.buletinName}
                             className="w-9 h-9 rounded-full object-cover border"
                           />
-                          <span className="font-medium text-gray-700">{b.buletinName || 'Unknown'}</span>
+                          <span className="font-medium text-gray-700">
+                            {b.buletinName || "Unknown"}
+                          </span>
                           <span className="text-xs text-gray-400">
-                            • {b.createdAt?.toLocaleDateString('id-ID', {
-                              day: 'numeric',
-                              month: 'long',
-                              year: 'numeric'
-                            })
-                              || 'Tidak diketahui'}
+                            •{" "}
+                            {b.createdAt?.toLocaleDateString("id-ID", {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric",
+                            }) || "Tidak diketahui"}
                           </span>
                         </div>
                         {/* Title */}
@@ -328,18 +354,20 @@ function Home() {
                         </h2>
                         {/* Subtitle */}
                         {b.subtitle && (
-                          <p className="text-lg text-gray-700 italic">{b.subtitle}</p>
+                          <p className="text-lg text-gray-700 italic">
+                            {b.subtitle}
+                          </p>
                         )}
                         {/* Snippet */}
                         <p className="text-base text-gray-500 line-clamp-3 leading-relaxed">
                           {b.content
                             ? b.content
-                              .replace(/<[^>]+>/g, '')
-                              .replace(/&nbsp;/g, ' ')
-                              .replace(/\s+/g, ' ')
+                              .replace(/<[^>]+>/g, "")
+                              .replace(/&nbsp;/g, " ")
+                              .replace(/\s+/g, " ")
                               .trim()
-                              .substring(0, 160) + '...'
-                            : 'No content.'}
+                              .substring(0, 160) + "..."
+                            : "No content."}
                         </p>
                         {/* Category badge */}
                         {b.category && (
@@ -349,10 +377,12 @@ function Home() {
                         )}
                       </div>
                       {/* Thumbnail */}
-                      {b.content && b.content.includes('<img') && (
+                      {b.content && b.content.includes("<img") && (
                         <div className="w-full sm:w-36 h-36 flex-shrink-0 rounded-lg overflow-hidden border">
                           <img
-                            src={b.content.match(/<img[^>]+src="([^">]+)"/)?.[1]}
+                            src={
+                              b.content.match(/<img[^>]+src="([^">]+)"/)?.[1]
+                            }
                             alt="Post thumbnail"
                             className="w-full h-full object-cover"
                           />
@@ -365,7 +395,7 @@ function Home() {
               {/* Pagination */}
               {totalPages > 1 && (
                 <div className="flex justify-center mt-12">
-                  <div className="flex items-center gap-1 bg-white/70 backdrop-blur-lg border border-white/50 px-4 py-2 rounded-2xl shadow-md">
+                  <div className="mt-8 flex items-center gap-1 bg-white/70 backdrop-blur-lg border border-white/50 px-4 py-2 rounded-2xl shadow-md">
                     {/* First */}
                     <button
                       onClick={() => handlePageChange(1)}
@@ -386,20 +416,20 @@ function Home() {
                     </button>
                     {/* Pages */}
                     {[...Array(totalPages)].map((_, index) => {
-                      const page = index + 1
-                      const isActive = currentPage === page
+                      const page = index + 1;
+                      const isActive = currentPage === page;
                       return (
                         <button
                           key={page}
                           onClick={() => handlePageChange(page)}
                           className={`px-3 py-1.5 rounded-lg text-sm font-semibold transition ${isActive
-                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow'
-                            : 'text-gray-700 hover:bg-gray-100'
+                              ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow"
+                              : "text-gray-700 hover:bg-gray-100"
                             }`}
                         >
                           {page}
                         </button>
-                      )
+                      );
                     })}
                     {/* Next */}
                     <button
@@ -429,7 +459,6 @@ function Home() {
                 <UserRecommendations userTopics={selectedTopics} />
               </div>
             </div>
-
           </div>
         </div>
         {/* Modal for Topic Selection */}
@@ -467,17 +496,20 @@ function Home() {
                 <button
                   onClick={async () => {
                     setShowModal(false);
-                    setActiveTopic('For You');
+                    setActiveTopic("For You");
 
                     const user = auth.currentUser;
                     if (!user) return;
 
                     try {
-                      const userRef = doc(db, 'users', user.uid);
+                      const userRef = doc(db, "users", user.uid);
                       await updateDoc(userRef, { topics: selectedTopics });
-                      localStorage.setItem('selectedTopics', JSON.stringify(selectedTopics));
+                      localStorage.setItem(
+                        "selectedTopics",
+                        JSON.stringify(selectedTopics)
+                      );
                     } catch (err) {
-                      console.error('Gagal simpan topik:', err);
+                      console.error("Gagal simpan topik:", err);
                     }
                   }}
                   className="px-4 py-2 rounded-lg text-sm bg-gradient-to-t from-blue-700 to-purple-600 text-white hover:from-blue-600 hover:to-purple-500 transition"
@@ -488,7 +520,6 @@ function Home() {
             </div>
           </div>
         )}
-
       </div>
     </>
   );

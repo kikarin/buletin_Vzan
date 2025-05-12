@@ -16,20 +16,20 @@ function CreateBuletinStep3() {
       alert('Semua field harus diisi');
       return;
     }
-  
+
     setIsLoading(true);
-  
+
     setTimeout(() => {
       localStorage.setItem('paymentInfo', JSON.stringify({
         bankName,
         accountHolder,
         accountNumber,
       }));
-  
+
       navigate('/dashboard');
-    }, 3000); // Simulasi delay 2 detik untuk loader
+    }, 3000);
   };
-  
+
 
   const formatCardNumber = (num) => {
     return num.replace(/\D/g, '').padEnd(16, '*').replace(/(.{4})/g, '$1 ').trim();
@@ -43,7 +43,7 @@ function CreateBuletinStep3() {
       </div>
     );
   }
-  
+
   return (
     <div className="max-w-xl mx-auto px-4 py-10">
       <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-white/40 shadow p-6 space-y-6">

@@ -10,26 +10,18 @@ function UserRecommendations({ userTopics }) {
   useEffect(() => {
     const fetchRecommendedUsers = async () => {
       try {
-        const newUsersSnap = await getDocs(
-          query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(5))
+        const snapshot = await getDocs(
+          query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(8))
         );
-        const newUsers = newUsersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-        const similarUsersSnap = await getDocs(
-          query(collection(db, 'users'), where('topics', 'array-contains-any', userTopics), limit(5))
-        );
-        const similarUsers = similarUsersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-        const combined = [...newUsers, ...similarUsers];
-        const unique = Array.from(new Map(combined.map(u => [u.id, u])).values());
-
-        setRecommendedUsers(unique.slice(0, 5));
+        const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setRecommendedUsers(users);
       } catch (err) {
         console.error('Gagal ambil rekomendasi:', err);
       } finally {
         setLoading(false);
       }
     };
+
 
     fetchRecommendedUsers();
   }, [userTopics]);

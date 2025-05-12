@@ -1,12 +1,11 @@
-// src/pages/Login.jsx
 import { useState } from 'react'
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
 import { auth } from '../services/firebase'
 import { useNavigate } from 'react-router-dom'
-import AuthLayout from '../components/AuthLayout'
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import BubbleLayer from '../components/BubbleLayer';
+import { Feather } from 'lucide-react';
 
 function Login() {
   const navigate = useNavigate()
@@ -22,7 +21,6 @@ function Login() {
 
       localStorage.setItem('userId', user.uid)
 
-      // Ambil data user dari Firestore
       const userRef = doc(db, 'users', user.uid)
       const userSnap = await getDoc(userRef)
 
@@ -67,7 +65,6 @@ function Login() {
       let isOnboarded = false
 
       if (!userSnap.exists()) {
-        // Jika user baru, buat data awal
         await setDoc(userRef, {
           email: user.email || '',
           name: user.displayName || '',
@@ -104,11 +101,11 @@ function Login() {
         <div className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm px-6 py-8 space-y-6">
           {/* Logo */}
           <div className="flex justify-center">
-            <img src="/src/assets/logo-t.png" alt="BuletinVzan Logo" className="w-12 h-12" />
+            <Feather className="w-12 h-12 text-blue-600 " />
           </div>
 
           <h2 className="text-2xl font-bold text-gray-800 text-center">
-            Masuk Akun BuletinVzan!
+            Masuk Akun <span className='text-transparent bg-clip-text bg-gradient-to-r from-blue-600/90 to-purple-600/90'>BuletinVzan!</span>
           </h2>
 
           {/* Form Login */}
@@ -179,10 +176,9 @@ function Login() {
       </div>
 
       {/* Right: Bubble Background */}
-        {/* Centered Logo */}
-        <img src="https://app.buletin.co/images/landing/bg-blur.avif" width="1850" height="1691" alt=""
-                    class="absolute xl:-mt-5 top-1/2 -translate-y-1/2 xl:min-w-[1850px] h-fit sm:min-w-[1200px] min-w-[800px] left-1/2 -translate-x-1/2" />
-        <BubbleLayer />
+      <img src="https://app.buletin.co/images/landing/bg-blur.avif" width="1850" height="1691" alt=""
+        class="absolute xl:-mt-5 top-1/2 -translate-y-1/2 xl:min-w-[1850px] h-fit sm:min-w-[1200px] min-w-[800px] left-1/2 -translate-x-1/2" />
+      <BubbleLayer />
     </div>
   );
 }

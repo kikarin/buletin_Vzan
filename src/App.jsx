@@ -21,13 +21,15 @@ import Step2_Profile from './pages/Onboarding/Step2_Profile';
 import Step3_Topics from './pages/Onboarding/Step3_Topics';
 import Step4_Preview from './pages/Onboarding/Step4_Preview';
 import ProtectedRoute from './components/ProtectedRoute';
+import MyBulletins from './pages/MyBulletins';
+import EditBuletins from './pages/EditBuletins';
 
 function Router() {
   return (
     <BrowserRouter>
       {/* ✅ Toast notification provider di sini */}
       <Toaster position="top-right" reverseOrder={false} />
-      
+
       <Routes>
         {/* Public routes */}
         <Route path="/" element={<Landing />} />
@@ -48,6 +50,10 @@ function Router() {
         <Route path="/create-buletin/step-2" element={<ProtectedRoute><CreateBuletinStep2 /></ProtectedRoute>} />
         <Route path="/create-buletin/step-3" element={<ProtectedRoute><CreateBuletinStep3 /></ProtectedRoute>} />
         <Route path="/profile/:userId" element={<ProtectedRoute><UserPublicProfile /></ProtectedRoute>} />
+        <Route path="/my-bulletins" element={<ProtectedRoute><MyBulletins /></ProtectedRoute>} />
+        <Route path="/edit-bulletin/:id" element={<EditBuletins />} />
+
+        {/* Onboarding routes */}
         <Route path="/onboarding/1" element={<ProtectedRoute><Step1_Welcome /></ProtectedRoute>} />
         <Route path="/onboarding/2" element={<ProtectedRoute><Step2_Profile /></ProtectedRoute>} />
         <Route path="/onboarding/3" element={<ProtectedRoute><Step3_Topics /></ProtectedRoute>} />

@@ -5,7 +5,6 @@ import { db } from '../services/firebase';
 
 function Navbar() {
   const navigate = useNavigate();
-  // Removed duplicate declaration of isHome
   const isWriting = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/create-buletin');
   const [loading, setLoading] = useState(false);
   const [userData, setUserData] = useState(null);
@@ -55,8 +54,8 @@ function Navbar() {
           <Link
             to="/home"
             className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm transition ${isHome
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-700 hover:bg-blue-50'
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-700 hover:bg-blue-50'
               }`}
           >
             <svg className={`w-4 h-4 ${isHome ? 'text-white' : 'text-blue-600'}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -64,23 +63,22 @@ function Navbar() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 20h9" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h9" />
             </svg>
-            Reading
+            Membaca
           </Link>
           <button
-  onClick={handleWritingClick}
-  disabled={loading}
-  className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm transition ${
-    isWriting
-      ? 'bg-purple-600 text-white'
-      : 'text-gray-700 hover:bg-purple-50'
-  } disabled:opacity-40`}
->
-  <svg className={`w-4 h-4 ${isWriting ? 'text-white' : 'text-purple-600'}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 20h9" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.5l4 4M4 13v7h7L20.5 10.5l-7-7L4 13z" />
-  </svg>
-  {loading ? 'Loading...' : 'Writing'}
-</button>
+            onClick={handleWritingClick}
+            disabled={loading}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm transition ${isWriting
+              ? 'bg-purple-600 text-white'
+              : 'text-gray-700 hover:bg-purple-50'
+              } disabled:opacity-40`}
+          >
+            <svg className={`w-4 h-4 ${isWriting ? 'text-white' : 'text-purple-600'}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 20h9" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.5l4 4M4 13v7h7L20.5 10.5l-7-7L4 13z" />
+            </svg>
+            {loading ? 'Loading...' : 'Menulis'}
+          </button>
 
         </div>
 

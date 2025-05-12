@@ -1,4 +1,3 @@
-// src/pages/Landing.jsx
 import { useEffect, useState } from 'react';
 import NavbarSection from '../components/NavbarSection';
 import HeroSection from '../components/HeroSection';

@@ -309,6 +309,7 @@ body {
   margin-top: 7px;
 }
 
+
 @media only screen and (max-width: 480px) {
   .container {
     transform: scale(0.7);
@@ -466,4 +467,43 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+
+.ck-editor__editable {
+  min-height: 400px;
+  max-height: 600px;
+  padding: 1rem !important;
+  background-color: white !important;
+  border: none !important;
+}
+
+.ck.ck-editor {
+  width: 100% !important;
+}
+
+.ck.ck-content {
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+  color: #333 !important;
+}
+
+.ck.ck-toolbar {
+  border: none !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  background-color: #f8fafc !important;
+  padding: 0.5rem !important;
+}
+
+.ck.ck-button {
+  color: #4b5563 !important;
+}
+
+.ck.ck-button:hover {
+  background-color: #e2e8f0 !important;
+}
+
+.ck.ck-button.ck-on {
+  background-color: #e2e8f0 !important;
+  color: #1e40af !important;
 }

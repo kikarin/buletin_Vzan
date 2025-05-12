@@ -3,10 +3,9 @@ import { useEffect, useRef } from 'react';
 const HeroBackground = () => {
   const containerRef = useRef(null);
 
-  // Mouse parallax effect (desktop only)
   useEffect(() => {
     const handleMouseMove = (e) => {
-      if (window.innerWidth < 768) return; // Skip on mobile
+      if (window.innerWidth < 768) return;
       const { innerWidth, innerHeight } = window;
       const x = (e.clientX - innerWidth / 2) / 50;
       const y = (e.clientY - innerHeight / 2) / 50;

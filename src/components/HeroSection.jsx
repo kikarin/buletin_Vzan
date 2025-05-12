@@ -1,9 +1,10 @@
 import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import heroImage from '../assets/hero-illustration.png';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { ArrowRight } from 'lucide-react';
+import Lottie from 'lottie-react';
+import AboutAnimation from '../assets/female-creative-artist-with-ideas.json';
 
 const HeroSection = () => {
   const navigate = useNavigate();
@@ -55,7 +56,7 @@ const HeroSection = () => {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
             <button
-              onClick={() => navigate('/register')}
+              onClick={() => navigate('/login')}
               className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 sm:px-8 sm:py-3 text-base sm:text-lg rounded-full hover:scale-105 transition shadow-lg  font-semibold"
             >
               <span className="inline-flex items-center gap-2">
@@ -99,11 +100,11 @@ const HeroSection = () => {
 
             {/* Main Image */}
             <img src="https://app.buletin.co/images/landing/bg-blur.avif" width="1850" height="1691" alt=""
-                    class="absolute xl:-mt-56 top-1/2 -translate-y-1/2 xl:min-w-[1050px] h-fit sm:min-w-[1200px] min-w-[800px] left-1/2 -translate-x-1/2" />
+              class="absolute xl:-mt-56 top-1/2 -translate-y-1/2 xl:min-w-[1050px] h-fit sm:min-w-[1200px] min-w-[800px] left-1/2 -translate-x-1/2" />
 
-            <img
-              src={heroImage}
-              alt="Ilustrasi Buletin"
+            <Lottie
+              animationData={AboutAnimation}
+              loop={true}
               className="object-contain w-[100%] mx-auto h-auto transform hover:scale-105 hover:rotate-1 transition duration-500 ease-in-out"
             />
           </div>

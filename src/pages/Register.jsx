@@ -9,6 +9,8 @@ import {
 } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import BubbleLayer from '../components/BubbleLayer';
+import { Feather } from 'lucide-react';
+
 
 function Register() {
   const navigate = useNavigate();
@@ -91,11 +93,11 @@ function Register() {
         <div className="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-sm px-6 py-8 space-y-4">
           {/* Logo */}
           <div className="flex justify-center">
-            <img src="/src/assets/logo-t.png" alt="BuletinVzan Logo" className="w-12 h-12" />
+            <Feather className="w-12 h-12 text-blue-600" />
           </div>
 
           <h2 className="text-2xl font-bold text-gray-800 text-center">
-            Daftar Akun BuletinVzan
+            Daftar Akun <span className='text-transparent bg-clip-text bg-gradient-to-r from-blue-600/90 to-purple-600/90'>BuletinVzan</span>
           </h2>
 
           {/* Form Register */}

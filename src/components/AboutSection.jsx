@@ -1,8 +1,10 @@
 import { useEffect } from 'react';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
-import AboutImage from '../assets/2.png';
 import { PenLine, Users, Send } from 'lucide-react';
+import Lottie from 'lottie-react';
+import AboutAnimation from '../assets/web-content-design.json';
+
 
 const iconWrapper =
   'w-14 h-14 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white shadow-lg shadow-purple-300/30';
@@ -43,7 +45,7 @@ const AboutSection = () => {
         {/* Title */}
         <div className="text-center mb-20" data-aos="fade-up">
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 mb-6 leading-tight">
-              Tulis
+            Tulis
           </h2>
 
 
@@ -65,11 +67,12 @@ const AboutSection = () => {
             />
 
             {/* About Image (This should appear above the first image) */}
-            <img
-              src={AboutImage}
-              alt="About Buletin"
-              className="relative w-full max-w-md mx-auto md:mx-0 rounded-3xl shadow-inherit ring-1 ring-blue-100 z-10"
+            <Lottie
+              animationData={AboutAnimation}
+              loop={true}
+              className="relative w-full max-w-md mx-auto md:mx-0 z-10"
             />
+
           </div>
 
           {/* Text Features */}

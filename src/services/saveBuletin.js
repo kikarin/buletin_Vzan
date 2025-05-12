@@ -9,10 +9,10 @@ import { db } from './firebase';
 export const saveBuletin = async (data) => {
   try {
     const docRef = await addDoc(collection(db, 'posts'), data);
-    console.log('✅ Buletin berhasil disimpan dengan ID:', docRef.id);
+    console.log('Buletin berhasil disimpan dengan ID:', docRef.id);
     return docRef.id;
   } catch (error) {
-    console.error('❌ Gagal menyimpan buletin:', error);
+    console.error('Gagal menyimpan buletin:', error);
     throw error;
   }
 };

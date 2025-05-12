@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../../services/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import HeroBackground from '../../components/HeroBackground';
+import { toast } from 'react-hot-toast';
 
 const topicList = [
   'Olahraga',
@@ -14,6 +15,7 @@ const topicList = [
   'Lingkungan',
   'Politik',
   'Kesehatan',
+  'Sosial',
 ];
 
 function Step3_Topics() {
@@ -26,25 +28,29 @@ function Step3_Topics() {
     );
   };
 
-  const handleNext = async () => {
-    if (selected.length === 0) {
-      alert('Pilih minimal 1 topik untuk lanjut');
-      return;
-    }
+const handleNext = async () => {
+  if (selected.length === 0) {
+    toast.error('Pilih minimal 1 topik untuk lanjut');
+    return;
+  }
 
-    const user = auth.currentUser;
-    if (!user) return alert('User tidak ditemukan');
+  const user = auth.currentUser;
+  if (!user) {
+    toast.error('User tidak ditemukan');
+    return;
+  }
 
-    const userRef = doc(db, 'users', user.uid);
+  const userRef = doc(db, 'users', user.uid);
 
-    try {
-      await setDoc(userRef, { topics: selected }, { merge: true });
-      navigate('/onboarding/4');
-    } catch (error) {
-      console.error('Gagal menyimpan topik:', error);
-      alert('Terjadi kesalahan saat menyimpan topik.');
-    }
-  };
+  try {
+    await setDoc(userRef, { topics: selected }, { merge: true });
+    toast.success('Topik berhasil disimpan');
+    navigate('/onboarding/4');
+  } catch (error) {
+    console.error('Gagal menyimpan topik:', error);
+    toast.error('Terjadi kesalahan saat menyimpan topik.');
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center font-sans relative overflow-hidden px-4 py-12">

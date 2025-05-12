@@ -29,8 +29,8 @@ export const saveBuletin = async ({
   buletinName,
   content,
   isPublic = true,
-  buletinProfileImage = '',
-  buletinsId = '',
+  buletinProfileImage = "",
+  buletinsId = "",
 }) => {
   try {
     const docRef = await addDoc(collection(db, "buletin"), {
@@ -53,4 +53,3 @@ export const saveBuletin = async ({
     throw error;
   }
 };
-

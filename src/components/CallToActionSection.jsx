@@ -49,7 +49,7 @@ const CallToActionSection = () => {
             <img
                 src={CallImage}
                 alt="Buletin dashboard preview"
-                className="relative z-[1] mt-10 w-[260px] sm:w-[360px] md:w-[480px] mx-auto rounded-xl shadow-2xl"
+                className="relative z-[1] w-screen sm:w-screen md:w-full "
                 data-aos="zoom-in"
                 data-aos-delay="200"
             />

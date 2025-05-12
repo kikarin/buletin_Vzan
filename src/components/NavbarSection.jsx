@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
-import Logo from '../assets/logo-t.png';
+import { Menu, X, Feather } from 'lucide-react';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -24,7 +23,7 @@ const Navbar = () => {
             ? 'bg-white/50 backdrop-blur-md border-b border-white/20 shadow-lg py-2'
             : 'bg-white/20 backdrop-blur-none border-b border-white/10 py-3'
             }`}>
-            <div className="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-between">
+            <div className="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-between text-blue-600 font-bold text-lg">
                 {/* Logo & Brand */}
                 <a
                     href="#hero"
@@ -32,10 +31,8 @@ const Navbar = () => {
                     aria-label="BuletinVzan Home"
                 >
                     <div className="w-9 h-9 flex items-center justify-center rounded-lg group-hover:rotate-12 transition-transform duration-300">
-                        <img
-                            src={Logo}
-                            alt="Buletin Logo"
-                            className="w-6 h-6 sm:w-8 sm:h-8 object-contain" />
+                        <Feather className="w-6 h-6 sm:w-7 sm:h-7 object-contain" />
+
                     </div>
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600/90 to-purple-600/90 font-bold text-xl tracking-tight">
                         BuletinVzan
@@ -59,10 +56,10 @@ const Navbar = () => {
                     ))}
                     <a
                         href="#daftar"
-                        className="ml-2 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold bg-gradient-to-r from-blue-500/90 to-purple-500/90 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group backdrop-blur-sm"
+                        className="ml-2 inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg font-semibold bg-gradient-to-r from-blue-500/90 to-purple-500/90 text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-300 group backdrop-blur-sm"
                     >
                         <svg
-                            className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300"
+                            className="w-3 h-3 group-hover:rotate-90 transition-transform duration-300"
                             fill="currentColor"
                             viewBox="0 0 16 16"
                         >
@@ -70,6 +67,7 @@ const Navbar = () => {
                         </svg>
                         <span className="hidden sm:inline">Daftar Beta</span>
                     </a>
+
                 </nav>
 
                 {/* Mobile Toggle */}

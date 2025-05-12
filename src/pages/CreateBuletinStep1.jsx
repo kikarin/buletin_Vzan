@@ -153,9 +153,9 @@ function CreateBuletinStep1() {
           <p className="text-sm text-gray-600 mt-2">Mulai dengan mengisi detail buletinmu secara lengkap.</p>
         </div>
 
-        <BuletinForm 
-          onSubmit={handleSubmit} 
-          loading={loading} 
+        <BuletinForm
+          onSubmit={handleSubmit}
+          loading={loading}
           buttonLabel="Selanjutnya"
           onImageUpload={handleImageUpload}
           uploading={uploading}

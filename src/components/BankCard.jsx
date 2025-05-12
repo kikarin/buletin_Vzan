@@ -1,4 +1,3 @@
-// src/components/BankCard.jsx
 function BankCard(
     { name = 'Nama Lengkap', number = '0000 0000 0000 0000' }
 ) {

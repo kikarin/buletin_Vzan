@@ -14,7 +14,7 @@ function Step2_Profile() {
   const [error, setError] = useState('')
   const [profileImage, setProfileImage] = useState(null)
   const [uploading, setUploading] = useState(false)
-  
+
 
   useEffect(() => {
     const user = auth.currentUser
@@ -36,13 +36,11 @@ function Step2_Profile() {
     const file = e.target.files[0]
     if (!file) return
 
-    // Validasi tipe file
     if (!file.type.match('image.*')) {
       setError('File harus berupa gambar')
       return
     }
 
-    // Validasi ukuran file (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setError('Ukuran file maksimal 5MB')
       return
@@ -76,15 +74,15 @@ function Step2_Profile() {
       setError('Nama lengkap minimal 3 karakter')
       return
     }
-  
+
     const user = auth.currentUser
     if (!user) {
       setError('User tidak ditemukan')
       return
     }
-  
+
     const userRef = doc(db, 'users', user.uid)
-  
+
     try {
       await setDoc(userRef, {
         name: name.trim(),
@@ -92,20 +90,19 @@ function Step2_Profile() {
         socialUrl: socialUrl.trim(),
         avatarUrl: profileImage || null
       }, { merge: true })
-  
-      // Simpan lokal opsional
+
       localStorage.setItem('userName', name.trim())
       localStorage.setItem('userAbout', about.trim())
       localStorage.setItem('userSocialUrl', socialUrl.trim())
       localStorage.setItem('userAvatar', profileImage || '')
-  
+
       navigate('/onboarding/3')
     } catch (error) {
       console.error('Gagal menyimpan profil:', error)
       setError('Gagal menyimpan data. Coba lagi.')
     }
   }
-  
+
   return (
     <div className="min-h-screen flex items-center justify-center font-sans relative overflow-hidden px-4 py-12">
       {/* Background */}

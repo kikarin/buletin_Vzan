@@ -1,4 +1,4 @@
-import { Facebook, Twitter, Instagram, Linkedin, Youtube } from 'lucide-react';
+import { Facebook, Twitter, Instagram, Linkedin, Youtube, Feather } from 'lucide-react';
 import Logo from '../assets/logo-t.png';
 
 const Footer = () => {
@@ -9,11 +9,9 @@ const Footer = () => {
         <div className="flex flex-col gap-8 xl:col-span-2 max-xl:order-last">
           <div className="flex flex-col gap-4">
             <div className="flex items-center">
-              <img
-                src={Logo}
-                alt="Buletin Logo"
-                className="w-6 h-6 sm:w-10 sm:h-10 object-contain" />
-              <h5 className="font-bold text-lg ml-2 text-gray-800">BuletinVzan</h5>
+              <Feather
+                className="w-6 h-6 sm:w-8 sm:h-8 object-contain text-blue-600 font-bold text-lg" />
+              <h5 className=" text-transparent bg-clip-text font-bold text-lg ml-2 bg-gradient-to-r from-blue-600/90 to-purple-600/90">BuletinVzan</h5>
             </div>
             <p className="text-slate-600">Publikasi Berbayar, Tanpa Ribet.</p>
           </div>
