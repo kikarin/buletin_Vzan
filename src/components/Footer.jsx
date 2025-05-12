@@ -1,5 +1,4 @@
 import { Facebook, Twitter, Instagram, Linkedin, Youtube, Feather } from 'lucide-react';
-import Logo from '../assets/logo-t.png';
 
 const Footer = () => {
   return (
