@@ -106,7 +106,7 @@ function Home() {
           .map((docSnap) => {
             const data = docSnap.data();
             return {
-              id: docSnap.id,
+          id: docSnap.id,
               ...data,
               createdAt: data.createdAt?.toDate?.() || new Date(),
             };
@@ -191,34 +191,34 @@ function Home() {
               </h1>
               <p className="mt-1 text-lg text-gray-600">
                 Dapatkan update terbaru dari buletin yang kamu ikuti.
-              </p>
-            </div>
+            </p>
+          </div>
 
             {/* Topic & Action Icons */}
             <div className="flex justify-between items-center mb-5">
               {/* Horizontal Scrollable Topics */}
               <div className="flex overflow-x-auto gap-2 whitespace-nowrap px-1 pb-1 scrollbar-hide">
-                <button
+            <button
                   onClick={() => setActiveTopic("For You")}
                   className={`flex-shrink-0 px-4 py-2 rounded-full border text-sm font-medium ${activeTopic === "For You"
                       ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                >
-                  For You
-                </button>
-                {selectedTopics.map((topic) => (
-                  <button
-                    key={topic}
-                    onClick={() => setActiveTopic(topic)}
+                }`}
+            >
+              For You
+            </button>
+            {selectedTopics.map((topic) => (
+              <button
+                key={topic}
+                onClick={() => setActiveTopic(topic)}
                     className={`min-w-max flex-shrink-0 px-4 py-2 rounded-full border text-sm font-medium ${activeTopic === topic
                         ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
                         : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                  >
-                    {topic}
-                  </button>
-                ))}
+                  }`}
+              >
+                {topic}
+              </button>
+            ))}
               </div>
 
               {/* Action Icons */}
@@ -245,8 +245,8 @@ function Home() {
                 </button>
 
                 {/* Manage Topics */}
-                <button
-                  onClick={() => setShowModal(true)}
+            <button
+              onClick={() => setShowModal(true)}
                   className="w-9 h-9 flex items-center justify-center rounded-full border border-gray-300 hover:bg-gray-100 transition"
                   aria-label="Manage Topics"
                 >
@@ -314,9 +314,9 @@ function Home() {
                 </div>
               ) : (
                 currentPosts.map((b) => (
-                  <div
-                    key={b.id}
-                    onClick={() => navigate(`/buletin/${b.id}`)}
+                <div
+                  key={b.id}
+                  onClick={() => navigate(`/buletin/${b.id}`)}
                     className="relative bg-white backdrop-blur-md rounded-2xl border border-black/10 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition duration-200 cursor-pointer group overflow-hidden"
                   >
                     {/* Accent bar */}
@@ -333,7 +333,7 @@ function Home() {
                                 b.buletinName || "B"
                               )}`
                             }
-                            alt={b.buletinName}
+                      alt={b.buletinName}
                             className="w-9 h-9 rounded-full object-cover border"
                           />
                           <span className="font-medium text-gray-700">
